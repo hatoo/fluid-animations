@@ -1,0 +1,15 @@
+[package]
+name = "fluid-animations"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "01_diffuse"
+path = "src/01_diffuse.rs"
+
+[dependencies]
+ndarray = "0.15.0"
+image = "0.23"
+anyhow = "1.0"

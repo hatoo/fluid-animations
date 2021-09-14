@@ -2,7 +2,7 @@ use fluid_animations::{lin_solve, Ghost};
 use ndarray::prelude::*;
 
 fn main() -> anyhow::Result<()> {
-    const N: usize = 64;
+    const N: usize = 400;
     const N_FRAME: usize = 64;
 
     let mut x0 = Array::zeros((N + 2, N + 2).f());
@@ -16,7 +16,8 @@ fn main() -> anyhow::Result<()> {
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &x0)?;
 
-        lin_solve(&mut x, &x0, a, 1.0 + 4.0 * a, Ghost::Both);
+        lin_solve(&mut x, &x0, a, 1.0 + 4.0 * a);
+        Ghost::Both.set_border(&mut x);
         std::mem::swap(&mut x, &mut x0);
 
         eprint!("\rframe: {} / {} done", f, N_FRAME);

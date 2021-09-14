@@ -10,7 +10,7 @@ pub enum Ghost {
     Vetical,
 }
 
-pub fn lin_solve(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32, g: Ghost) {
+pub fn lin_solve(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32) {
     assert_eq!(x.shape(), x0.shape());
 
     for _ in 0..20 {
@@ -22,10 +22,9 @@ pub fn lin_solve(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32, g: Ghost
             }
         }
     }
-    g.set_border(x);
 }
 
-pub fn lin_solve_rayon(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32, g: Ghost) {
+pub fn lin_solve_rayon(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32) {
     assert_eq!(x.shape(), x0.shape());
 
     let mut t = Array::zeros(x.dim());
@@ -47,7 +46,6 @@ pub fn lin_solve_rayon(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32, g:
 
         std::mem::swap(x1, x);
     }
-    g.set_border(x);
 }
 
 impl Ghost {

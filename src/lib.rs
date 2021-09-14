@@ -1,4 +1,5 @@
 use ndarray::prelude::*;
+use ndarray::Zip;
 
 pub mod image;
 
@@ -9,7 +10,7 @@ pub enum Ghost {
     Vetical,
 }
 
-pub fn lin_solve(x: &mut Array2<f32>, x0: &mut Array2<f32>, a: f32, c: f32, g: Ghost) {
+pub fn lin_solve(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32, g: Ghost) {
     assert_eq!(x.shape(), x0.shape());
 
     for _ in 0..20 {
@@ -20,6 +21,31 @@ pub fn lin_solve(x: &mut Array2<f32>, x0: &mut Array2<f32>, a: f32, c: f32, g: G
                     / c;
             }
         }
+    }
+    g.set_border(x);
+}
+
+pub fn lin_solve_rayon(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32, g: Ghost) {
+    assert_eq!(x.shape(), x0.shape());
+
+    let mut t = Array::zeros(x.dim());
+    let x1 = &mut t;
+
+    let h = x.shape()[0] - 2;
+    let w = x.shape()[1] - 2;
+
+    for _ in 0..300 {
+        Zip::from(x1.slice_mut(s![1..h + 1, 1..w + 1]))
+            .and(x0.slice(s![1..h + 1, 1..w + 1]))
+            .and(x.slice(s![0..h, 1..w + 1]))
+            .and(x.slice(s![2..h + 2, 1..w + 1]))
+            .and(x.slice(s![1..h + 1, 0..w]))
+            .and(x.slice(s![1..h + 1, 2..w + 2]))
+            .par_for_each(|x1, &z, &b1, &b2, &b3, &b4| {
+                *x1 = (z + a * (b1 + b2 + b3 + b4)) / c;
+            });
+
+        std::mem::swap(x1, x);
     }
     g.set_border(x);
 }

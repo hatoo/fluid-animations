@@ -16,7 +16,7 @@ fn main() -> anyhow::Result<()> {
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &x0)?;
 
-        lin_solve(&mut x, &mut x0, a, 1.0 + 4.0 * a, Ghost::Both);
+        lin_solve(&mut x, &x0, a, 1.0 + 4.0 * a, Ghost::Both);
         std::mem::swap(&mut x, &mut x0);
 
         eprint!("\rframe: {} / {} done", f, N_FRAME);

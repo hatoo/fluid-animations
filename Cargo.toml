@@ -17,6 +17,10 @@ path = "src/02_dens_step.rs"
 name = "03_vector_noise"
 path = "src/03_vector_noise.rs"
 
+[[bin]]
+name = "04_multiple_densities"
+path = "src/04_multiple_densities.rs"
+
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"

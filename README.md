@@ -9,3 +9,11 @@ cargo run 01_diffuse --release
 ```
 
 Open images in `out` directory.
+
+## Cheat sheet
+
+Create movie file from pngs
+
+```
+ffmpeg -r 24 -i out/%06d.png out.mp4
+```

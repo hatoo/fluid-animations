@@ -5,7 +5,7 @@ My codes for [The Art of Fluid Animation](https://www.routledge.com/The-Art-of-F
 ## Run
 
 ```
-cargo run 01_diffuse --release
+cargo run --release --bin 01_diffuse
 ```
 
 Open images in `out` directory.

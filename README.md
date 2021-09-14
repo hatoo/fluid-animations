@@ -15,5 +15,5 @@ Open images in `out` directory.
 Create movie file from pngs
 
 ```
-ffmpeg -r 24 -i out/%06d.png out.mp4
+ffmpeg -r 24 -i out/%06d.png -pix_fmt yuv420p out.mp4
 ```

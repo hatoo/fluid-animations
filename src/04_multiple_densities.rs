@@ -1,11 +1,11 @@
 use fluid_animations::{advect, lin_solve, Ghost};
 use glam::Vec2;
-use ndarray::prelude::*;
+use ndarray::{prelude::*, Zip};
 use noise::{NoiseFn, Perlin, Seedable};
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
-    const N_FRAME: usize = 64;
+    const N_FRAME: usize = 120;
 
     let create_uv = |dim, seed| {
         let perlin = Perlin::new().set_seed(seed);
@@ -17,8 +17,9 @@ fn main() -> anyhow::Result<()> {
         })
     };
 
-    let mut x0 = Array::zeros((N + 2, N + 2));
-    x0[[N / 2, N / 2]] = 40000.0;
+    let x0 = Array::zeros((N + 2, N + 2));
+    let mut s = x0.clone();
+    s[[N / 2, N / 2]] = 100000.0;
 
     let mut rgb = [
         (x0.clone(), x0.clone(), create_uv(x0.dim(), 1)),
@@ -34,6 +35,10 @@ fn main() -> anyhow::Result<()> {
         fluid_animations::image::save_rgb(f, &rgb[0].1, &rgb[1].1, &rgb[2].1)?;
 
         for (x, x0, uv) in rgb.iter_mut() {
+            Zip::from(&mut *x0).and(&s).for_each(|x, &s| {
+                *x += dt * s;
+            });
+
             lin_solve(x, x0, a, 1.0 + 4.0 * a);
             Ghost::Both.set_border(x);
             std::mem::swap(x, x0);

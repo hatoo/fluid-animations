@@ -10,7 +10,7 @@ fn main() -> anyhow::Result<()> {
     let mut x = x0.clone();
 
     let dt = 1.0 / 24.0;
-    let diff = 0.01;
+    let diff = 0.0005;
     let a = dt * diff * N as f32 * N as f32;
 
     for f in 1..N_FRAME + 1 {

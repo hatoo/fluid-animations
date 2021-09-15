@@ -14,7 +14,9 @@ pub enum Ghost {
 pub fn lin_solve(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32) {
     assert_eq!(x.dim(), x0.dim());
 
-    for _ in 0..20 {
+    x.clone_from(x0);
+
+    for _ in 0..150 {
         for i in 1..x.dim().0 - 1 {
             for j in 1..x.dim().1 - 1 {
                 x[[i, j]] = (x0[[i, j]]
@@ -31,10 +33,12 @@ pub fn lin_solve_rayon(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32) {
     let mut t = Array::zeros(x.dim());
     let x1 = &mut t;
 
+    x.clone_from(x0);
+
     let h = x.dim().0 - 2;
     let w = x.dim().1 - 2;
 
-    for _ in 0..300 {
+    for _ in 0..600 {
         Zip::from(x1.slice_mut(s![1..h + 1, 1..w + 1]))
             .and(x0.slice(s![1..h + 1, 1..w + 1]))
             .and(x.slice(s![0..h, 1..w + 1]))

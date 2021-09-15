@@ -2,6 +2,7 @@ use fluid_animations::{advect, lin_solve, Ghost};
 use glam::Vec2;
 use ndarray::{prelude::*, Zip};
 use noise::{NoiseFn, Perlin, Seedable};
+use rayon::prelude::*;
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
@@ -34,7 +35,7 @@ fn main() -> anyhow::Result<()> {
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save_rgb(f, &rgb[0].1, &rgb[1].1, &rgb[2].1)?;
 
-        for (x, x0, uv) in rgb.iter_mut() {
+        rgb.par_iter_mut().for_each(|(x, x0, uv)| {
             Zip::from(&mut *x0).and(&s).for_each(|x, &s| {
                 *x += dt * s;
             });
@@ -45,7 +46,7 @@ fn main() -> anyhow::Result<()> {
             advect(x, x0, uv, dt);
             Ghost::Both.set_border(x);
             std::mem::swap(x, x0);
-        }
+        });
 
         eprint!("\rframe: {} / {} done", f, N_FRAME);
     }

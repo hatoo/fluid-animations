@@ -134,6 +134,7 @@ dependencies = [
  "image",
  "ndarray",
  "noise",
+ "rayon",
 ]
 
 [[package]]

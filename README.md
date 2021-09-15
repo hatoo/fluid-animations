@@ -12,7 +12,25 @@ Open images in `out` directory.
 
 # Demos
 
-![01_diffuse](demos/01_diffuse.mp4)
+## 01_diffuse
+
+![01_diffuse](demos/01_diffuse.gif)
+
+## 02_dens_step
+
+![02_dens_step](demos/02_dens_step.gif)
+
+## 03_vector_noise
+
+![02_dens_step](demos/03_vector_noise.gif)
+
+## 04_multiple_densities
+
+![02_dens_step](demos/04_multiple_densities.gif)
+
+## 05_vel_step
+
+![02_dens_step](demos/05_vel_step.gif)
 
 ## Cheat sheet
 

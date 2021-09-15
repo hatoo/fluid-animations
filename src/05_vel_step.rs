@@ -1,5 +1,5 @@
 use cgmath::vec2;
-use fluid_animations::{advect, dens_step, diffuse, project, set_border_v2, vel_step, Ghost};
+use fluid_animations::{dens_step, vel_step};
 use ndarray::{prelude::*, Zip};
 use noise::{NoiseFn, Perlin};
 
@@ -32,11 +32,8 @@ fn main() -> anyhow::Result<()> {
 
     let dt = 1.0 / 24.0;
     let diff = 0.025;
-    let a = dt * diff * N as f32 * N as f32;
 
     let visc = 0.005;
-
-    let v = dt * visc * N as f32 * N as f32;
 
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &x0)?;

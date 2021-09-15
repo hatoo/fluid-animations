@@ -53,6 +53,10 @@ pub fn lin_solve_rayon(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32) {
     }
 }
 
+pub fn diffuse(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32) {
+    lin_solve(x, x0, a, 1.0 + 4.0 * a);
+}
+
 pub fn advect(d: &mut Array2<f32>, d0: &Array2<f32>, uv: &Array2<Vec2>, dt: f32) {
     assert_eq!(d.dim(), d0.dim());
     assert_eq!(uv.dim(), d0.dim());

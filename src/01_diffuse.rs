@@ -1,4 +1,4 @@
-use fluid_animations::{lin_solve, Ghost};
+use fluid_animations::{diffuse, Ghost};
 use ndarray::prelude::*;
 
 fn main() -> anyhow::Result<()> {
@@ -16,7 +16,7 @@ fn main() -> anyhow::Result<()> {
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &x0)?;
 
-        lin_solve(&mut x, &x0, a, 1.0 + 4.0 * a);
+        diffuse(&mut x, &x0, a);
         Ghost::Both.set_border(&mut x);
         std::mem::swap(&mut x, &mut x0);
 

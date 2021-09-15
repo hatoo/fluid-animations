@@ -1,4 +1,4 @@
-use fluid_animations::{advect, lin_solve, Ghost};
+use fluid_animations::{advect, diffuse, Ghost};
 use glam::Vec2;
 use ndarray::{prelude::*, Zip};
 use noise::{NoiseFn, Perlin, Seedable};
@@ -40,7 +40,7 @@ fn main() -> anyhow::Result<()> {
                 *x += dt * s;
             });
 
-            lin_solve(x, x0, a, 1.0 + 4.0 * a);
+            diffuse(x, x0, a);
             Ghost::Both.set_border(x);
             std::mem::swap(x, x0);
             advect(x, x0, uv, dt);

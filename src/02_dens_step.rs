@@ -1,4 +1,4 @@
-use fluid_animations::{advect, lin_solve, Ghost};
+use fluid_animations::{advect, diffuse, Ghost};
 use glam::Vec2;
 use ndarray::{prelude::*, Zip};
 
@@ -27,7 +27,7 @@ fn main() -> anyhow::Result<()> {
         Zip::from(&mut x0).and(&s).for_each(|x, &s| {
             *x += dt * s;
         });
-        lin_solve(&mut x, &x0, a, 1.0 + 4.0 * a);
+        diffuse(&mut x, &x0, a);
         Ghost::Both.set_border(&mut x);
         std::mem::swap(&mut x, &mut x0);
         advect(&mut x, &x0, &uv, dt);

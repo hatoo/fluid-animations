@@ -1,5 +1,5 @@
 use cgmath::vec2;
-use fluid_animations::{advect, diffuse, project, set_border_v2, Ghost};
+use fluid_animations::{advect, dens_step, diffuse, project, set_border_v2, vel_step, Ghost};
 use ndarray::{prelude::*, Zip};
 use noise::{NoiseFn, Perlin};
 
@@ -45,28 +45,10 @@ fn main() -> anyhow::Result<()> {
             *a += dt * b;
         });
 
-        /*
-        Zip::from(&mut uv0).and(&duv).for_each(|a, &b| {
-            *a += dt * b;
-        });
-        */
-
-        diffuse(&mut uv, &uv0, v);
-        set_border_v2(&mut uv);
+        vel_step(&mut uv, &mut uv0, &mut p, &mut div, visc, dt);
         std::mem::swap(&mut uv, &mut uv0);
 
-        project(&mut uv0, &mut p, &mut div);
-        set_border_v2(&mut uv0);
-        advect(&mut uv, &uv0, &uv0, dt);
-        std::mem::swap(&mut uv, &mut uv0);
-        project(&mut uv0, &mut p, &mut div);
-        set_border_v2(&mut uv0);
-
-        diffuse(&mut x, &x0, a);
-        Ghost::Both.set_border(&mut x);
-        std::mem::swap(&mut x, &mut x0);
-        advect(&mut x, &x0, &uv0, dt);
-        Ghost::Both.set_border(&mut x);
+        dens_step(&mut x, &mut x0, &mut uv0, diff, dt);
         std::mem::swap(&mut x, &mut x0);
 
         eprint!("\rframe: {} / {} done", f, N_FRAME);

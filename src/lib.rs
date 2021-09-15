@@ -147,6 +147,47 @@ pub fn project(uv: &mut Array2<Vector2<f32>>, p: &mut Array2<f32>, div: &mut Arr
     }
 }
 
+pub fn dens_step(
+    x: &mut Array2<f32>,
+    x0: &mut Array2<f32>,
+    uv: &Array2<Vector2<f32>>,
+    diff: f32,
+    dt: f32,
+) {
+    assert_eq!(x.dim(), x0.dim());
+    assert_eq!(x.dim(), uv.dim());
+    let a = (x.dim().0 * x.dim().1) as f32 * dt * diff;
+    diffuse(x, x0, a);
+    Ghost::Both.set_border(x);
+    std::mem::swap(x, x0);
+    advect(x, x0, uv, dt);
+    Ghost::Both.set_border(x);
+}
+
+pub fn vel_step(
+    uv: &mut Array2<Vector2<f32>>,
+    uv0: &mut Array2<Vector2<f32>>,
+    p: &mut Array2<f32>,
+    div: &mut Array2<f32>,
+    visc: f32,
+    dt: f32,
+) {
+    assert_eq!(uv.dim(), uv0.dim());
+    assert_eq!(uv.dim(), p.dim());
+    assert_eq!(uv.dim(), div.dim());
+
+    let a = (uv.dim().0 * uv.dim().1) as f32 * dt * visc;
+    diffuse(uv, uv0, a);
+    set_border_v2(uv);
+    std::mem::swap(uv, uv0);
+    project(uv0, p, div);
+    set_border_v2(uv0);
+    advect(uv, uv0, uv0, dt);
+    set_border_v2(uv);
+    project(uv, p, div);
+    set_border_v2(uv);
+}
+
 impl Ghost {
     pub fn set_border(self, x: &mut Array2<f32>) {
         let h = x.dim().0 - 2;

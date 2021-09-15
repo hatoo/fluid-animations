@@ -6,7 +6,7 @@ use rayon::prelude::*;
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
-    const N_FRAME: usize = 120;
+    const N_FRAME: usize = 64;
 
     let create_uv = |dim, seed| {
         let perlin = Perlin::new().set_seed(seed);

@@ -153,6 +153,7 @@ dependencies = [
  "image",
  "ndarray",
  "noise",
+ "num-traits",
  "rayon",
 ]
 

@@ -21,6 +21,10 @@ path = "src/03_vector_noise.rs"
 name = "04_multiple_densities"
 path = "src/04_multiple_densities.rs"
 
+[[bin]]
+name = "05_vel_step"
+path = "src/05_vel_step.rs"
+
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"
@@ -28,3 +32,4 @@ anyhow = "1.0"
 noise = "0.7.0"
 rayon = "1.5"
 cgmath = "0.18.0"
+num-traits = "0.2"

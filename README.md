@@ -10,6 +10,10 @@ cargo run --release --bin 01_diffuse
 
 Open images in `out` directory.
 
+# Demos
+
+![01_diffuse](demos/01_diffuse.mp4)
+
 ## Cheat sheet
 
 Create movie file from pngs

@@ -38,7 +38,7 @@ pub fn lin_solve_rayon(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32, c: f32) {
     let h = x.dim().0 - 2;
     let w = x.dim().1 - 2;
 
-    for _ in 0..600 {
+    for _ in 0..300 {
         Zip::from(x1.slice_mut(s![1..h + 1, 1..w + 1]))
             .and(x0.slice(s![1..h + 1, 1..w + 1]))
             .and(x.slice(s![0..h, 1..w + 1]))

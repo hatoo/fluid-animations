@@ -1,5 +1,5 @@
+use cgmath::vec2;
 use fluid_animations::{advect, diffuse, Ghost};
-use glam::Vec2;
 use ndarray::{prelude::*, Zip};
 
 fn main() -> anyhow::Result<()> {
@@ -15,7 +15,7 @@ fn main() -> anyhow::Result<()> {
         s
     };
 
-    let uv = Array::from_elem(x.dim(), Vec2::new(0.0, -1.0));
+    let uv = Array::from_elem(x.dim(), vec2(0.0, -1.0));
 
     let dt = 1.0 / 24.0;
     let diff = 0.015;

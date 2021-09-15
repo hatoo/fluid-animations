@@ -1,5 +1,5 @@
+use cgmath::vec2;
 use fluid_animations::{advect, diffuse, Ghost};
-use glam::Vec2;
 use ndarray::{prelude::*, Zip};
 use noise::{NoiseFn, Perlin, Seedable};
 use rayon::prelude::*;
@@ -14,7 +14,7 @@ fn main() -> anyhow::Result<()> {
         Array::from_shape_fn(dim, |(i, j)| {
             let dx = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.0]);
             let dy = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.5]);
-            Vec2::new(dx as f32, dy as f32) * 8.0
+            vec2(dx as f32, dy as f32) * 8.0
         })
     };
 

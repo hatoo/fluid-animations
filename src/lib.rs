@@ -1,4 +1,4 @@
-use glam::Vec2;
+use cgmath::Vector2;
 use ndarray::prelude::*;
 use ndarray::Zip;
 
@@ -57,7 +57,7 @@ pub fn diffuse(x: &mut Array2<f32>, x0: &Array2<f32>, a: f32) {
     lin_solve(x, x0, a, 1.0 + 4.0 * a);
 }
 
-pub fn advect(d: &mut Array2<f32>, d0: &Array2<f32>, uv: &Array2<Vec2>, dt: f32) {
+pub fn advect(d: &mut Array2<f32>, d0: &Array2<f32>, uv: &Array2<Vector2<f32>>, dt: f32) {
     assert_eq!(d.dim(), d0.dim());
     assert_eq!(uv.dim(), d0.dim());
 

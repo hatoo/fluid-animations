@@ -1,4 +1,4 @@
-use fluid_animations::{diffuse, Ghost};
+use fluid_animations::{diffuse, Float, Ghost};
 use ndarray::prelude::*;
 
 fn main() -> anyhow::Result<()> {
@@ -11,7 +11,7 @@ fn main() -> anyhow::Result<()> {
 
     let dt = 1.0 / 24.0;
     let diff = 0.0005;
-    let a = dt * diff * N as f32 * N as f32;
+    let a = dt * diff * N as Float * N as Float;
 
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &x0)?;

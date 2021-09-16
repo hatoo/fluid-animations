@@ -1,5 +1,5 @@
 use cgmath::vec2;
-use fluid_animations::{advect, diffuse, Ghost};
+use fluid_animations::{advect, diffuse, Float, Ghost};
 use ndarray::prelude::*;
 use noise::{NoiseFn, Perlin};
 
@@ -17,12 +17,12 @@ fn main() -> anyhow::Result<()> {
     let uv = Array::from_shape_fn(x.dim(), |(i, j)| {
         let dx = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.0]);
         let dy = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.5]);
-        vec2(dx as f32, dy as f32) * 4.0
+        vec2(dx as Float, dy as Float) * 4.0
     });
 
     let dt = 1.0 / 24.0;
     let diff = 0.025;
-    let a = dt * diff * N as f32 * N as f32;
+    let a = dt * diff * N as Float * N as Float;
 
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &x0)?;

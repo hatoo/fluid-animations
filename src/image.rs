@@ -1,7 +1,9 @@
 use image::{Rgb, RgbImage};
 use ndarray::prelude::*;
 
-pub fn save(index: usize, x: &Array2<f32>) -> anyhow::Result<()> {
+use crate::Float;
+
+pub fn save(index: usize, x: &Array2<Float>) -> anyhow::Result<()> {
     let shape = x.dim();
 
     let mut img = RgbImage::new(shape.1 as u32, shape.0 as u32);
@@ -20,9 +22,9 @@ pub fn save(index: usize, x: &Array2<f32>) -> anyhow::Result<()> {
 
 pub fn save_rgb(
     index: usize,
-    r: &Array2<f32>,
-    g: &Array2<f32>,
-    b: &Array2<f32>,
+    r: &Array2<Float>,
+    g: &Array2<Float>,
+    b: &Array2<Float>,
 ) -> anyhow::Result<()> {
     assert_eq!(r.dim(), g.dim());
     assert_eq!(g.dim(), b.dim());

@@ -10,6 +10,8 @@ use cgmath::Vector2;
 use ndarray::prelude::*;
 use ndarray::Zip;
 
+pub type Float = f64;
+
 pub mod image;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -25,16 +27,16 @@ where
     Self: Add<Self, Output = Self>,
     Self: Sub<Self, Output = Self>,
     Self: Sum<Self>,
-    Self: Mul<f32, Output = Self>,
-    Self: Div<f32, Output = Self>,
-    Self: Rem<f32, Output = Self>,
+    Self: Mul<Float, Output = Self>,
+    Self: Div<Float, Output = Self>,
+    Self: Rem<Float, Output = Self>,
 {
 }
 
-impl Vector for f32 {}
-impl Vector for Vector2<f32> {}
+impl Vector for Float {}
+impl Vector for Vector2<Float> {}
 
-pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: f32, c: f32) {
+pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float, c: Float) {
     assert_eq!(x.dim(), x0.dim());
 
     x.clone_from(x0);
@@ -50,7 +52,7 @@ pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: f32, c: f32) {
     }
 }
 
-pub fn lin_solve_rayon<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: f32, c: f32) {
+pub fn lin_solve_rayon<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float, c: Float) {
     assert_eq!(x.dim(), x0.dim());
 
     let mut t = Array::zeros(x.dim());
@@ -76,26 +78,31 @@ pub fn lin_solve_rayon<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: f32, c: 
     }
 }
 
-pub fn diffuse<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: f32) {
+pub fn diffuse<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float) {
     lin_solve(x, x0, a, 1.0 + 4.0 * a);
 }
 
-pub fn advect<V: Vector>(d: &mut Array2<V>, d0: &Array2<V>, uv: &Array2<Vector2<f32>>, dt: f32) {
+pub fn advect<V: Vector>(
+    d: &mut Array2<V>,
+    d0: &Array2<V>,
+    uv: &Array2<Vector2<Float>>,
+    dt: Float,
+) {
     assert_eq!(d.dim(), d0.dim());
     assert_eq!(uv.dim(), d0.dim());
 
     let h = d.dim().0 - 2;
     let w = d.dim().1 - 2;
 
-    let dt0 = dt * ((h * w) as f32).sqrt();
+    let dt0 = dt * ((h * w) as Float).sqrt();
 
     for i in 1..h + 1 {
         for j in 1..w + 1 {
-            let y = i as f32 - dt0 * uv[[i, j]].y;
-            let x = j as f32 - dt0 * uv[[i, j]].x;
+            let y = i as Float - dt0 * uv[[i, j]].y;
+            let x = j as Float - dt0 * uv[[i, j]].x;
 
-            let y = y.max(0.5).min(h as f32 + 0.5);
-            let x = x.max(0.5).min(w as f32 + 0.5);
+            let y = y.max(0.5).min(h as Float + 0.5);
+            let x = x.max(0.5).min(w as Float + 0.5);
 
             let i0 = y as usize;
             let i1 = i0 + 1;
@@ -103,10 +110,10 @@ pub fn advect<V: Vector>(d: &mut Array2<V>, d0: &Array2<V>, uv: &Array2<Vector2<
             let j0 = x as usize;
             let j1 = j0 + 1;
 
-            let t1 = y - i0 as f32;
+            let t1 = y - i0 as Float;
             let t0 = 1.0 - t1;
 
-            let s1 = x - j0 as f32;
+            let s1 = x - j0 as Float;
             let s0 = 1.0 - s1;
 
             d[[i, j]] = (d0[[i0, j0]] * t0 + d0[[i0, j1]] * t1) * s0
@@ -115,14 +122,14 @@ pub fn advect<V: Vector>(d: &mut Array2<V>, d0: &Array2<V>, uv: &Array2<Vector2<
     }
 }
 
-pub fn project(uv: &mut Array2<Vector2<f32>>, p: &mut Array2<f32>, div: &mut Array2<f32>) {
+pub fn project(uv: &mut Array2<Vector2<Float>>, p: &mut Array2<Float>, div: &mut Array2<Float>) {
     assert_eq!(uv.dim(), p.dim());
     assert_eq!(uv.dim(), div.dim());
 
     let h = uv.dim().0 - 2;
     let w = uv.dim().1 - 2;
 
-    let n = ((h * w) as f32).sqrt();
+    let n = ((h * w) as Float).sqrt();
 
     for i in 1..h + 1 {
         for j in 1..w + 1 {
@@ -148,15 +155,15 @@ pub fn project(uv: &mut Array2<Vector2<f32>>, p: &mut Array2<f32>, div: &mut Arr
 }
 
 pub fn dens_step(
-    x: &mut Array2<f32>,
-    x0: &mut Array2<f32>,
-    uv: &Array2<Vector2<f32>>,
-    diff: f32,
-    dt: f32,
+    x: &mut Array2<Float>,
+    x0: &mut Array2<Float>,
+    uv: &Array2<Vector2<Float>>,
+    diff: Float,
+    dt: Float,
 ) {
     assert_eq!(x.dim(), x0.dim());
     assert_eq!(x.dim(), uv.dim());
-    let a = (x.dim().0 * x.dim().1) as f32 * dt * diff;
+    let a = (x.dim().0 * x.dim().1) as Float * dt * diff;
     diffuse(x, x0, a);
     Ghost::Both.set_border(x);
     std::mem::swap(x, x0);
@@ -165,18 +172,18 @@ pub fn dens_step(
 }
 
 pub fn vel_step(
-    uv: &mut Array2<Vector2<f32>>,
-    uv0: &mut Array2<Vector2<f32>>,
-    p: &mut Array2<f32>,
-    div: &mut Array2<f32>,
-    visc: f32,
-    dt: f32,
+    uv: &mut Array2<Vector2<Float>>,
+    uv0: &mut Array2<Vector2<Float>>,
+    p: &mut Array2<Float>,
+    div: &mut Array2<Float>,
+    visc: Float,
+    dt: Float,
 ) {
     assert_eq!(uv.dim(), uv0.dim());
     assert_eq!(uv.dim(), p.dim());
     assert_eq!(uv.dim(), div.dim());
 
-    let a = (uv.dim().0 * uv.dim().1) as f32 * dt * visc;
+    let a = (uv.dim().0 * uv.dim().1) as Float * dt * visc;
     diffuse(uv, uv0, a);
     set_border_v2(uv);
     std::mem::swap(uv, uv0);
@@ -189,7 +196,7 @@ pub fn vel_step(
 }
 
 impl Ghost {
-    pub fn set_border(self, x: &mut Array2<f32>) {
+    pub fn set_border(self, x: &mut Array2<Float>) {
         let h = x.dim().0 - 2;
         let w = x.dim().1 - 2;
 
@@ -225,7 +232,7 @@ impl Ghost {
         x[[h + 1, w + 1]] = 0.5 * (x[[h, w + 1]] + x[[h + 1, w]]);
     }
 
-    fn set_border_v2_elem(self, x: &mut Array2<Vector2<f32>>, e: usize) {
+    fn set_border_v2_elem(self, x: &mut Array2<Vector2<Float>>, e: usize) {
         let h = x.dim().0 - 2;
         let w = x.dim().1 - 2;
 
@@ -262,7 +269,7 @@ impl Ghost {
     }
 }
 
-pub fn set_border_v2(uv: &mut Array2<Vector2<f32>>) {
+pub fn set_border_v2(uv: &mut Array2<Vector2<Float>>) {
     Ghost::Horizontal.set_border_v2_elem(uv, 0);
     Ghost::Vetical.set_border_v2_elem(uv, 1);
 }

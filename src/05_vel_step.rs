@@ -1,5 +1,5 @@
 use cgmath::vec2;
-use fluid_animations::{dens_step, vel_step};
+use fluid_animations::{dens_step, vel_step, Float};
 use ndarray::{prelude::*, Zip};
 use noise::{NoiseFn, Perlin};
 
@@ -21,7 +21,7 @@ fn main() -> anyhow::Result<()> {
     let duv = Array::from_shape_fn(x.dim(), |(i, j)| {
         let dx = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.0]);
         let dy = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.5]);
-        vec2(dx as f32, dy as f32) * 4.0
+        vec2(dx as Float, dy as Float) * 4.0
     });
 
     let mut uv0 = duv;

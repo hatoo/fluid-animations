@@ -25,6 +25,10 @@ path = "src/04_multiple_densities.rs"
 name = "05_vel_step"
 path = "src/05_vel_step.rs"
 
+[[bin]]
+name = "06_advect_improved"
+path = "src/06_advect_improved.rs"
+
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"

@@ -1,5 +1,5 @@
 use cgmath::vec2;
-use fluid_animations::{advect2, diffuse, Float, Ghost};
+use fluid_animations::{diffuse, v2::advect, Float, Ghost};
 use ndarray::prelude::*;
 use noise::{NoiseFn, Perlin};
 
@@ -30,7 +30,7 @@ fn main() -> anyhow::Result<()> {
         diffuse(&mut x, &x0, a);
         Ghost::Both.set_border(&mut x);
         std::mem::swap(&mut x, &mut x0);
-        advect2(&mut x, &x0, &uv, dt);
+        advect(&mut x, &x0, &uv, dt);
         Ghost::Both.set_border(&mut x);
         std::mem::swap(&mut x, &mut x0);
 

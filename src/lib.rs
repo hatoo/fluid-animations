@@ -36,6 +36,8 @@ where
 impl Vector for Float {}
 impl Vector for Vector2<Float> {}
 
+pub mod v2;
+
 pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float, c: Float) {
     assert_eq!(x.dim(), x0.dim());
 
@@ -122,104 +124,6 @@ pub fn advect<V: Vector>(
     }
 }
 
-pub fn interpolate_linear<V: Vector>(q: &Array2<V>, ij: Vector2<Float>) -> V {
-    let h = q.dim().0 - 2;
-    let w = q.dim().1 - 2;
-
-    let y = ij.y.max(0.5).min(h as Float + 0.5);
-    let x = ij.x.max(0.5).min(w as Float + 0.5);
-
-    let i0 = y as usize;
-    let i1 = i0 + 1;
-
-    let j0 = x as usize;
-    let j1 = j0 + 1;
-
-    let t1 = y - i0 as Float;
-    let t0 = 1.0 - t1;
-
-    let s1 = x - j0 as Float;
-    let s0 = 1.0 - s1;
-
-    (q[[i0, j0]] * t0 + q[[i0, j1]] * t1) * s0 + (q[[i1, j0]] * t0 + q[[i1, j1]] * t1) * s1
-}
-
-pub fn interpolate_bicubic<V: Vector>(q: &Array2<V>, ij: Vector2<Float>) -> V {
-    let h = q.dim().0 - 2;
-    let w = q.dim().1 - 2;
-
-    let y = ij.y.max(1.5).min((h - 1) as Float + 0.5);
-    let x = ij.x.max(1.5).min((w - 1) as Float + 0.5);
-
-    let i = y as usize;
-    let j = x as usize;
-
-    let t = y - i as Float;
-    let s = x - j as Float;
-
-    let t_m1 = -1.0 / 3.0 * t + 0.5 * t * t - 1.0 / 6.0 * t * t * t;
-    let t_0 = 1.0 - t * t + 0.5 * (t * t * t - t);
-    let t_p1 = t + 0.5 * (t * t - t * t * t);
-    let t_p2 = 1.0 / 6.0 * (t * t * t - t);
-
-    let s_m1 = -1.0 / 3.0 * s + 0.5 * s * s - 1.0 / 6.0 * s * s * s;
-    let s_0 = 1.0 - s * s + 0.5 * (s * s * s - s);
-    let s_p1 = s + 0.5 * (s * s - s * s * s);
-    let s_p2 = 1.0 / 6.0 * (s * s * s - s);
-
-    let q_m1 = q[[i - 1, j - 1]] * t_m1
-        + q[[i, j - 1]] * t_0
-        + q[[i + 1, j - 1]] * t_p1
-        + q[[i + 2, j - 1]] * t_p2;
-
-    let q_0 = q[[i - 1, j]] * t_m1 + q[[i, j]] * t_0 + q[[i + 1, j]] * t_p1 + q[[i + 2, j]] * t_p2;
-
-    let q_p1 = q[[i - 1, j + 1]] * t_m1
-        + q[[i, j + 1]] * t_0
-        + q[[i + 1, j + 1]] * t_p1
-        + q[[i + 2, j + 1]] * t_p2;
-
-    let q_p2 = q[[i - 1, j + 2]] * t_m1
-        + q[[i, j + 2]] * t_0
-        + q[[i + 1, j + 2]] * t_p1
-        + q[[i + 2, j + 2]] * t_p2;
-
-    q_m1 * s_m1 + q_0 * s_0 + q_p1 * s_p1 + q_p2 * s_p2
-}
-
-pub fn advect2<V: Vector>(
-    d: &mut Array2<V>,
-    d0: &Array2<V>,
-    uv: &Array2<Vector2<Float>>,
-    dt: Float,
-) {
-    assert_eq!(d.dim(), d0.dim());
-    assert_eq!(uv.dim(), d0.dim());
-
-    let h = d.dim().0 - 2;
-    let w = d.dim().1 - 2;
-
-    let dt0 = dt * ((h * w) as Float).sqrt();
-
-    for i in 1..h + 1 {
-        for j in 1..w + 1 {
-            /*
-            let x_g = vec2(j as Float, i as Float);
-            let x_mid = x_g - 0.5 * dt0 * uv[[i, j]];
-            let x_p = x_g - dt0 * linear_interpolate(uv, x_mid);
-            */
-            let x0 = vec2(j as Float, i as Float);
-            let k1 = uv[[i, j]];
-            let k2 = interpolate_linear(uv, x0 - 0.5 * dt0 * k1);
-            let k3 = interpolate_linear(uv, x0 - 0.75 * dt0 * k2);
-
-            let v = x0 - 2.0 / 9.0 * dt0 * k1 - 3.0 / 9.0 * dt0 * k2 - 4.0 / 9.0 * dt0 * k3;
-
-            d[[i, j]] = interpolate_bicubic(d0, v);
-        }
-    }
-}
-
 pub fn project(uv: &mut Array2<Vector2<Float>>, p: &mut Array2<Float>, div: &mut Array2<Float>) {
     assert_eq!(uv.dim(), p.dim());
     assert_eq!(uv.dim(), div.dim());
@@ -269,23 +173,6 @@ pub fn dens_step(
     Ghost::Both.set_border(x);
 }
 
-pub fn dens_step2(
-    x: &mut Array2<Float>,
-    x0: &mut Array2<Float>,
-    uv: &Array2<Vector2<Float>>,
-    diff: Float,
-    dt: Float,
-) {
-    assert_eq!(x.dim(), x0.dim());
-    assert_eq!(x.dim(), uv.dim());
-    let a = (x.dim().0 * x.dim().1) as Float * dt * diff;
-    diffuse(x, x0, a);
-    Ghost::Both.set_border(x);
-    std::mem::swap(x, x0);
-    advect2(x, x0, uv, dt);
-    Ghost::Both.set_border(x);
-}
-
 pub fn vel_step(
     uv: &mut Array2<Vector2<Float>>,
     uv0: &mut Array2<Vector2<Float>>,
@@ -305,30 +192,6 @@ pub fn vel_step(
     project(uv0, p, div);
     set_border_v2(uv0);
     advect(uv, uv0, uv0, dt);
-    set_border_v2(uv);
-    project(uv, p, div);
-    set_border_v2(uv);
-}
-
-pub fn vel_step2(
-    uv: &mut Array2<Vector2<Float>>,
-    uv0: &mut Array2<Vector2<Float>>,
-    p: &mut Array2<Float>,
-    div: &mut Array2<Float>,
-    visc: Float,
-    dt: Float,
-) {
-    assert_eq!(uv.dim(), uv0.dim());
-    assert_eq!(uv.dim(), p.dim());
-    assert_eq!(uv.dim(), div.dim());
-
-    let a = (uv.dim().0 * uv.dim().1) as Float * dt * visc;
-    diffuse(uv, uv0, a);
-    set_border_v2(uv);
-    std::mem::swap(uv, uv0);
-    project(uv0, p, div);
-    set_border_v2(uv0);
-    advect2(uv, uv0, uv0, dt);
     set_border_v2(uv);
     project(uv, p, div);
     set_border_v2(uv);

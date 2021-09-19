@@ -15,8 +15,8 @@ fn main() -> anyhow::Result<()> {
     let perlin = Perlin::new();
     let freq = 10.0;
     let uv = Array::from_shape_fn(x.dim(), |(i, j)| {
-        let dx = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.0]);
-        let dy = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.5]);
+        let dy = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.0]);
+        let dx = perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.5]);
         vec2(dx as Float, dy as Float) * 4.0
     });
 

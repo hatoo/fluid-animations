@@ -35,6 +35,11 @@ Open images in `out` directory.
 ## 06_advect_improved
 
 ![06_advect_improved](demos/06_advect_improved.gif)
+
+## 07_mac_uv
+
+![06_advect_improved](demos/07_mac_uv.gif)
+
 ## Cheat sheet
 
 Create movie file from pngs

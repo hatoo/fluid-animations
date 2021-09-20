@@ -51,12 +51,12 @@ impl Mac {
             let v = self.v[[i, j]];
             let u = if j == 0 {
                 0.5 * (self.u[[i, j]] + self.u[[i + 1, j]])
-            } else if j == self.u.dim().0 - 1 {
+            } else if j == self.v.dim().1 - 1 {
                 0.5 * (self.u[[i, j - 1]] + self.u[[i + 1, j - 1]])
             } else {
                 0.25 * (self.u[[i, j]]
-                    + self.u[[i + 1, j]]
                     + self.u[[i, j - 1]]
+                    + self.u[[i + 1, j]]
                     + self.u[[i + 1, j - 1]])
             };
             vec2(u, v)
@@ -89,6 +89,13 @@ impl Mac {
                 self.v[[i, j]] += 0.5 * (p[[i, j]] - p[[i, j - 1]]);
             }
         }
+    }
+
+    pub fn diffuse(&mut self, a: Float) {
+        let u0 = self.u.clone();
+        let v0 = self.v.clone();
+        lin_solve(&mut self.u, &u0, a, 1.0 + 4.0 * a);
+        lin_solve(&mut self.v, &v0, a, 1.0 + 4.0 * a);
     }
 }
 

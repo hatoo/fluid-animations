@@ -1,4 +1,4 @@
-use std::f64::consts::PI;
+use num_traits::FloatConst;
 
 use cgmath::{vec2, Vector2};
 use ndarray::{Array, Array2};
@@ -195,7 +195,7 @@ pub fn advect<V: Vector>(
 
 pub fn gauss_filter(x: &Array2<Float>, sigma2: Float, unit: Float) -> Array2<Float> {
     let cut_off = 3.0 * sigma2.sqrt();
-    let left = 1.0 / (2.0 * PI * sigma2).sqrt();
+    let left = 1.0 / (2.0 * Float::PI() * sigma2).sqrt();
     let coeff: Vec<Float> = (0..)
         .map(|i| left * (-(i as Float * unit).powi(2) / (2.0 * sigma2)).exp())
         .take_while(|&f| f > cut_off)

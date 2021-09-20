@@ -13,7 +13,7 @@ fn main() -> anyhow::Result<()> {
     let mut x0 = Array::zeros((N + 2, N + 2));
     let mut x = x0.clone();
 
-    x0[[N / 2, N / 2]] = 10000.0;
+    x0[[N / 2, N / 2]] = 40000.0;
 
     let perlin = Perlin::new();
     let freq = 10.0;
@@ -26,9 +26,7 @@ fn main() -> anyhow::Result<()> {
         perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.0])
     });
 
-    let mac = Mac::new(u, v);
-
-    let uv = mac.create_uv();
+    let mut mac = Mac::new(u, v);
 
     let dt = 1.0 / 24.0;
     let diff = 0.025;
@@ -36,6 +34,10 @@ fn main() -> anyhow::Result<()> {
 
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &x0)?;
+
+        // mac.self_advect(dt);
+        mac.project();
+        let uv = mac.create_uv();
 
         diffuse(&mut x, &x0, a);
         Ghost::Both.set_border(&mut x);

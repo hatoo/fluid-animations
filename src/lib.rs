@@ -41,7 +41,7 @@ pub mod v2;
 pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float, c: Float) {
     assert_eq!(x.dim(), x0.dim());
 
-    x.clone_from(x0);
+    // x.clone_from(x0);
 
     for _ in 0..150 {
         for i in 1..x.dim().0 - 1 {
@@ -131,13 +131,13 @@ pub fn project(uv: &mut Array2<Vector2<Float>>, p: &mut Array2<Float>, div: &mut
     let h = uv.dim().0 - 2;
     let w = uv.dim().1 - 2;
 
-    let n = ((h * w) as Float).sqrt();
+    // let n = ((h * w) as Float).sqrt();
 
     for i in 1..h + 1 {
         for j in 1..w + 1 {
             div[[i, j]] = -0.5
                 * (uv[[i + 1, j]].y - uv[[i - 1, j]].y + uv[[i, j + 1]].x - uv[[i, j - 1]].x)
-                / n;
+                /* / n */ ;
             p[[i, j]] = 0.0;
         }
     }
@@ -151,7 +151,7 @@ pub fn project(uv: &mut Array2<Vector2<Float>>, p: &mut Array2<Float>, div: &mut
     for i in 1..h + 1 {
         for j in 1..w + 1 {
             uv[[i, j]] -=
-                0.5 * n * vec2(p[[i, j + 1]] - p[[i, j - 1]], p[[i + 1, j]] - p[[i - 1, j]]);
+                0.5 * /* n * */ vec2(p[[i, j + 1]] - p[[i, j - 1]], p[[i + 1, j]] - p[[i - 1, j]]);
         }
     }
 }

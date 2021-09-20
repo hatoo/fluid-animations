@@ -1,7 +1,7 @@
 use cgmath::{vec2, Vector2};
 use ndarray::{Array, Array2};
 
-use crate::{Float, Vector};
+use crate::{lin_solve, Float, Vector};
 
 pub struct Mac {
     u: Array2<Float>,
@@ -47,11 +47,11 @@ impl Mac {
             vec2(u, v)
         });
 
-        let v_uv = Array::from_shape_fn(self.u.dim(), |(i, j)| {
+        let v_uv = Array::from_shape_fn(self.v.dim(), |(i, j)| {
             let v = self.v[[i, j]];
             let u = if j == 0 {
                 0.5 * (self.u[[i, j]] + self.u[[i + 1, j]])
-            } else if i == self.u.dim().0 - 1 {
+            } else if j == self.u.dim().0 - 1 {
                 0.5 * (self.u[[i, j - 1]] + self.u[[i + 1, j - 1]])
             } else {
                 0.25 * (self.u[[i, j]]
@@ -66,6 +66,29 @@ impl Mac {
         let v0 = self.v.clone();
         advect(&mut self.u, &u0, &u_uv, dt);
         advect(&mut self.v, &v0, &v_uv, dt);
+    }
+
+    pub fn project(&mut self) {
+        let div = Array::from_shape_fn(self.dim(), |(i, j)| {
+            0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]])
+        });
+
+        let mut p = Array::zeros(div.dim());
+
+        lin_solve(&mut p, &div, 1.0, 4.0);
+
+        let (w, h) = self.dim();
+        for i in 1..w {
+            for j in 0..h {
+                self.u[[i, j]] += 0.5 * (p[[i, j]] - p[[i - 1, j]]);
+            }
+        }
+
+        for i in 0..w {
+            for j in 1..h {
+                self.v[[i, j]] += 0.5 * (p[[i, j]] - p[[i, j - 1]]);
+            }
+        }
     }
 }
 

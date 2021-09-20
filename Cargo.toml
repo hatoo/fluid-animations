@@ -29,6 +29,10 @@ path = "src/05_vel_step.rs"
 name = "06_advect_improved"
 path = "src/06_advect_improved.rs"
 
+[[bin]]
+name = "07_mac_uv"
+path = "src/07_mac_uv.rs"
+
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"

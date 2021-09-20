@@ -1,7 +1,73 @@
 use cgmath::{vec2, Vector2};
-use ndarray::Array2;
+use ndarray::{Array, Array2};
 
 use crate::{Float, Vector};
+
+pub struct Mac {
+    u: Array2<Float>,
+    v: Array2<Float>,
+}
+
+impl Mac {
+    pub fn new(u: Array2<Float>, v: Array2<Float>) -> Self {
+        let u_dim = u.dim();
+        let v_dim = v.dim();
+
+        assert_eq!((u_dim.0 - 1, u_dim.1), (v_dim.0, v_dim.1 - 1));
+
+        Self { u, v }
+    }
+
+    pub fn dim(&self) -> (usize, usize) {
+        (self.v.dim().0, self.u.dim().1)
+    }
+
+    pub fn create_uv(&self) -> Array2<Vector2<Float>> {
+        Array::from_shape_fn(self.dim(), |(i, j)| {
+            let u = 0.5 * (self.u[[i, j]] + self.u[[i + 1, j]]);
+            let v = 0.5 * (self.v[[i, j]] + self.v[[i, j + 1]]);
+
+            vec2(u, v)
+        })
+    }
+
+    pub fn self_advect(&mut self, dt: Float) {
+        let u_uv = Array::from_shape_fn(self.u.dim(), |(i, j)| {
+            let u = self.u[[i, j]];
+            let v = if i == 0 {
+                0.5 * (self.v[[i, j]] + self.v[[i, j + 1]])
+            } else if i == self.u.dim().0 - 1 {
+                0.5 * (self.v[[i - 1, j]] + self.v[[i - 1, j + 1]])
+            } else {
+                0.25 * (self.v[[i, j]]
+                    + self.v[[i, j + 1]]
+                    + self.v[[i - 1, j]]
+                    + self.v[[i - 1, j + 1]])
+            };
+            vec2(u, v)
+        });
+
+        let v_uv = Array::from_shape_fn(self.u.dim(), |(i, j)| {
+            let v = self.v[[i, j]];
+            let u = if j == 0 {
+                0.5 * (self.u[[i, j]] + self.u[[i + 1, j]])
+            } else if i == self.u.dim().0 - 1 {
+                0.5 * (self.u[[i, j - 1]] + self.u[[i + 1, j - 1]])
+            } else {
+                0.25 * (self.u[[i, j]]
+                    + self.u[[i + 1, j]]
+                    + self.u[[i, j - 1]]
+                    + self.u[[i + 1, j - 1]])
+            };
+            vec2(u, v)
+        });
+
+        let u0 = self.u.clone();
+        let v0 = self.v.clone();
+        advect(&mut self.u, &u0, &u_uv, dt);
+        advect(&mut self.v, &v0, &v_uv, dt);
+    }
+}
 
 pub fn interpolate_linear<V: Vector>(q: &Array2<V>, ij: Vector2<Float>) -> V {
     let w = q.dim().0 - 2;

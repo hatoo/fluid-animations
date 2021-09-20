@@ -40,6 +40,10 @@ Open images in `out` directory.
 
 ![06_advect_improved](demos/07_mac_uv.gif)
 
+## 08_gauss_filter
+
+![08_gauss_filter](demos/08_gauss_filter.gif)
+
 ## Cheat sheet
 
 Create movie file from pngs

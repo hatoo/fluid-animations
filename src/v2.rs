@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use cgmath::{vec2, Vector2};
 use ndarray::{Array, Array2};
 
@@ -189,4 +191,44 @@ pub fn advect<V: Vector>(
             d[[i, j]] = interpolate_linear(d0, v);
         }
     }
+}
+
+pub fn gauss_filter(x: &Array2<Float>, sigma2: Float, unit: Float) -> Array2<Float> {
+    let cut_off = 3.0 * sigma2.sqrt();
+    let left = 1.0 / (2.0 * PI * sigma2).sqrt();
+    let coeff: Vec<Float> = (0..)
+        .map(|i| left * (-(i as Float * unit).powi(2) / (2.0 * sigma2)).exp())
+        .take_while(|&f| f > cut_off)
+        .take(x.dim().0.max(x.dim().1))
+        .collect();
+
+    let coeff_sum_inv = 1.0 / (coeff.iter().sum::<Float>() * 2.0 - coeff[0]);
+
+    let x1 = Array::from_shape_fn(x.dim(), |(i, j)| {
+        let mut sum = coeff[0] * x[[i, j]];
+        for c in 1..coeff.len() {
+            if i >= c {
+                sum += coeff[c] * x[[i - c, j]];
+            }
+
+            if i + c < x.dim().0 {
+                sum += coeff[c] * x[[i + c, j]];
+            }
+        }
+        sum * coeff_sum_inv
+    });
+
+    Array::from_shape_fn(x.dim(), |(i, j)| {
+        let mut sum = coeff[0] * x1[[i, j]];
+        for c in 1..coeff.len() {
+            if j >= c {
+                sum += coeff[c] * x1[[i, j - c]];
+            }
+
+            if j + c < x.dim().1 {
+                sum += coeff[c] * x1[[i, j + c]];
+            }
+        }
+        sum * coeff_sum_inv
+    })
 }

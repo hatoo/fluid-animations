@@ -31,7 +31,7 @@ impl Mac {
         })
     }
 
-    pub fn self_advect(&mut self, dt: Float) {
+    pub fn self_advect(&mut self, weight: Float) {
         let u_uv = Array::from_shape_fn(self.u.dim(), |(i, j)| {
             let u = self.u[[i, j]];
             let v = if i == 0 {
@@ -64,8 +64,8 @@ impl Mac {
 
         let u0 = self.u.clone();
         let v0 = self.v.clone();
-        advect(&mut self.u, &u0, &u_uv, dt);
-        advect(&mut self.v, &v0, &v_uv, dt);
+        advect(&mut self.u, &u0, &u_uv, weight);
+        advect(&mut self.v, &v0, &v_uv, weight);
     }
 
     pub fn project(&mut self) {
@@ -168,7 +168,7 @@ pub fn advect<V: Vector>(
     d: &mut Array2<V>,
     d0: &Array2<V>,
     uv: &Array2<Vector2<Float>>,
-    dt: Float,
+    weight: Float,
 ) {
     assert_eq!(d.dim(), d0.dim());
     assert_eq!(uv.dim(), d0.dim());
@@ -176,16 +176,15 @@ pub fn advect<V: Vector>(
     let w = d.dim().0 - 2;
     let h = d.dim().1 - 2;
 
-    let dt0 = dt * ((w * h) as Float).sqrt();
-
     for i in 1..w + 1 {
         for j in 1..h + 1 {
             let x0 = vec2(i as Float, j as Float);
             let k1 = uv[[i, j]];
-            let k2 = interpolate_linear(uv, x0 - 0.5 * dt0 * k1);
-            let k3 = interpolate_linear(uv, x0 - 0.75 * dt0 * k2);
+            let k2 = interpolate_linear(uv, x0 - 0.5 * weight * k1);
+            let k3 = interpolate_linear(uv, x0 - 0.75 * weight * k2);
 
-            let v = x0 - 2.0 / 9.0 * dt0 * k1 - 3.0 / 9.0 * dt0 * k2 - 4.0 / 9.0 * dt0 * k3;
+            let v =
+                x0 - 2.0 / 9.0 * weight * k1 - 3.0 / 9.0 * weight * k2 - 4.0 / 9.0 * weight * k3;
 
             d[[i, j]] = interpolate_linear(d0, v);
         }

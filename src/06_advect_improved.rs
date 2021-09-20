@@ -21,8 +21,9 @@ fn main() -> anyhow::Result<()> {
     });
 
     let dt = 1.0 / 24.0;
+    let unit = 1.0 / N as Float;
     let diff = 0.025;
-    let a = dt * diff * N as Float * N as Float;
+    let a = dt * diff * (1.0 / unit) * (1.0 / unit);
 
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &x0)?;
@@ -30,7 +31,7 @@ fn main() -> anyhow::Result<()> {
         diffuse(&mut x, &x0, a);
         Ghost::Both.set_border(&mut x);
         std::mem::swap(&mut x, &mut x0);
-        advect(&mut x, &x0, &uv, dt);
+        advect(&mut x, &x0, &uv, dt / unit);
         Ghost::Both.set_border(&mut x);
         std::mem::swap(&mut x, &mut x0);
 

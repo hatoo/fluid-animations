@@ -15,16 +15,16 @@ fn main() -> anyhow::Result<()> {
 
     let dt: Float = 1.0 / 24.0;
     let unit = 1.0 / N as Float;
-    let k_t = 0.1;
-    let k_s = 0.1;
+    let k_t = 0.01;
+    let k_s = 0.01;
     let r_t = 1.0;
 
     let t_sigma2 = 0.5 * k_t * dt;
     let s_sigma2 = 0.5 * k_s * dt;
     let uv_sigma2 = 0.5 * 0.1 * dt;
 
-    let alpha = 0.025;
-    let beta = 0.025;
+    let alpha = (2.0 - 1.251) / 1.251;
+    let beta = 0.004;
 
     let t_amb = 273.0;
 
@@ -47,9 +47,9 @@ fn main() -> anyhow::Result<()> {
         let uv = uv_mac.create_uv();
 
         t[[N / 2, N / 2]] +=
-            (1.0 - (-r_t * dt).exp()) * ((50.0) * N as Float * N as Float - t[[N / 2, N / 2]]);
+            (1.0 - (-r_t * dt).exp()) * ((10.0) * N as Float * N as Float - t[[N / 2, N / 2]]);
 
-        s[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.2;
+        s[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.025;
 
         let mut s1 = gauss_filter(&s, s_sigma2, unit);
         Ghost::Both.set_border(&mut s1);

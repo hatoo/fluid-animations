@@ -122,7 +122,7 @@ impl Mac {
 
     pub fn project2(&mut self, dt: Float, dx: Float, density: Float) {
         let div = Array::from_shape_fn(self.dim(), |(i, j)| {
-            0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]])
+            -0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
         });
 
         let mut p = Array::zeros(div.dim());

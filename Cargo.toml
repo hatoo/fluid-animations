@@ -37,6 +37,10 @@ path = "src/07_mac_uv.rs"
 name = "08_gauss_filter"
 path = "src/08_gauss_filter.rs"
 
+[[bin]]
+name = "09_buoyancy"
+path = "src/09_buoyancy.rs"
+
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"

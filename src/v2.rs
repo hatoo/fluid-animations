@@ -20,6 +20,13 @@ impl Mac {
         Self { u, v }
     }
 
+    pub fn zeros((w, h): (usize, usize)) -> Self {
+        Self {
+            u: Array::zeros((w + 1, h)),
+            v: Array::zeros((w, h + 1)),
+        }
+    }
+
     pub fn dim(&self) -> (usize, usize) {
         (self.v.dim().0, self.u.dim().1)
     }
@@ -98,6 +105,45 @@ impl Mac {
         let v0 = self.v.clone();
         lin_solve(&mut self.u, &u0, a, 1.0 + 4.0 * a);
         lin_solve(&mut self.v, &v0, a, 1.0 + 4.0 * a);
+    }
+
+    pub fn gauss_filter(&mut self, sigma2: Float, unit: Float) {
+        self.u = gauss_filter(&self.u, sigma2, unit);
+        self.v = gauss_filter(&self.v, sigma2, unit);
+    }
+
+    pub fn buoyancy(
+        &mut self,
+        s: &Array2<Float>,
+        t: &Array2<Float>,
+        alpha: Float,
+        beta: Float,
+        t_amb: Float,
+        g: Float,
+    ) {
+        let (w, h) = self.dim();
+
+        for i in 0..w {
+            for j in 0..h + 1 {
+                let s = {
+                    let up = if j == 0 { 0.0 } else { s[[i, j - 1]] };
+
+                    let down = if j == h { 0.0 } else { s[[i, j]] };
+
+                    0.5 * (up + down)
+                };
+
+                let t = {
+                    let up = if j == 0 { t_amb } else { t[[i, j - 1]] };
+
+                    let down = if j == h { t_amb } else { t[[i, j]] };
+
+                    0.5 * (up + down)
+                };
+
+                self.v[[i, j]] += (alpha * s - beta * (t - t_amb)) * g;
+            }
+        }
     }
 }
 
@@ -194,7 +240,7 @@ pub fn advect<V: Vector>(
 }
 
 pub fn gauss_filter(x: &Array2<Float>, sigma2: Float, unit: Float) -> Array2<Float> {
-    let cut_off = 3.0 * sigma2.sqrt();
+    let cut_off = 2.0 * sigma2.sqrt();
     let left = 1.0 / (2.0 * Float::PI() * sigma2).sqrt();
     let coeff: Vec<Float> = (0..)
         .map(|i| left * (-(i as Float * unit).powi(2) / (2.0 * sigma2)).exp())
@@ -227,6 +273,59 @@ pub fn gauss_filter(x: &Array2<Float>, sigma2: Float, unit: Float) -> Array2<Flo
 
             if j + c < x.dim().1 {
                 sum += coeff[c] * x1[[i, j + c]];
+            }
+        }
+        sum * coeff_sum_inv
+    })
+}
+
+pub fn gauss_filter_amb(
+    x: &Array2<Float>,
+    sigma2: Float,
+    unit: Float,
+    amb: Float,
+) -> Array2<Float> {
+    let cut_off = 2.0 * sigma2.sqrt();
+    let left = 1.0 / (2.0 * Float::PI() * sigma2).sqrt();
+    let coeff: Vec<Float> = (0..)
+        .map(|i| left * (-(i as Float * unit).powi(2) / (2.0 * sigma2)).exp())
+        .take_while(|&f| f > cut_off)
+        .take(x.dim().0.max(x.dim().1))
+        .collect();
+
+    let coeff_sum_inv = 1.0 / (coeff.iter().sum::<Float>() * 2.0 - coeff[0]);
+
+    let x1 = Array::from_shape_fn(x.dim(), |(i, j)| {
+        let mut sum = coeff[0] * x[[i, j]];
+        for c in 1..coeff.len() {
+            if i >= c {
+                sum += coeff[c] * x[[i - c, j]];
+            } else {
+                sum += coeff[c] * amb;
+            }
+
+            if i + c < x.dim().0 {
+                sum += coeff[c] * x[[i + c, j]];
+            } else {
+                sum += coeff[c] * amb;
+            }
+        }
+        sum * coeff_sum_inv
+    });
+
+    Array::from_shape_fn(x.dim(), |(i, j)| {
+        let mut sum = coeff[0] * x1[[i, j]];
+        for c in 1..coeff.len() {
+            if j >= c {
+                sum += coeff[c] * x1[[i, j - c]];
+            } else {
+                sum += coeff[c] * amb;
+            }
+
+            if j + c < x.dim().1 {
+                sum += coeff[c] * x1[[i, j + c]];
+            } else {
+                sum += coeff[c] * amb;
             }
         }
         sum * coeff_sum_inv

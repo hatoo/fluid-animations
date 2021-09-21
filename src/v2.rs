@@ -240,7 +240,7 @@ pub fn advect<V: Vector>(
 }
 
 pub fn gauss_filter(x: &Array2<Float>, sigma2: Float, unit: Float) -> Array2<Float> {
-    let cut_off = 2.0 * sigma2.sqrt();
+    let cut_off = 0.1 * sigma2.sqrt();
     let left = 1.0 / (2.0 * Float::PI() * sigma2).sqrt();
     let coeff: Vec<Float> = (0..)
         .map(|i| left * (-(i as Float * unit).powi(2) / (2.0 * sigma2)).exp())
@@ -285,7 +285,7 @@ pub fn gauss_filter_amb(
     unit: Float,
     amb: Float,
 ) -> Array2<Float> {
-    let cut_off = 2.0 * sigma2.sqrt();
+    let cut_off = 0.1 * sigma2.sqrt();
     let left = 1.0 / (2.0 * Float::PI() * sigma2).sqrt();
     let coeff: Vec<Float> = (0..)
         .map(|i| left * (-(i as Float * unit).powi(2) / (2.0 * sigma2)).exp())

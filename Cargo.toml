@@ -41,6 +41,10 @@ path = "src/08_gauss_filter.rs"
 name = "09_buoyancy"
 path = "src/09_buoyancy.rs"
 
+[[bin]]
+name = "10_project2"
+path = "src/10_project2.rs"
+
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"

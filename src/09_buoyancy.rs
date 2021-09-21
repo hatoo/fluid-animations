@@ -3,7 +3,7 @@ use fluid_animations::{
     Float, Ghost,
 };
 use ndarray::prelude::*;
-use noise::{NoiseFn, Perlin};
+// use noise::{NoiseFn, Perlin};
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
@@ -47,8 +47,8 @@ fn main() -> anyhow::Result<()> {
     let g = 9.8;
 
     for f in 1..N_FRAME + 1 {
-        // fluid_animations::image::save(f, &s)?;
-        fluid_animations::image::save(f, &((&t - t_amb) / t_amb))?;
+        fluid_animations::image::save(f, &s)?;
+        // fluid_animations::image::save(f, &((&t - t_amb) / t_amb))?;
 
         t[[N / 2, N / 2]] += (1.0 - (-r_t * dt).exp())
             * ((t_amb + 50.0) * N as Float * N as Float - t[[N / 2, N / 2]]);
@@ -56,7 +56,7 @@ fn main() -> anyhow::Result<()> {
         s[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.5;
 
         // dbg!(t[[N / 2, N / 2]]);
-        dbg!(t.sum() / (N as Float * N as Float));
+        // dbg!(t.sum() / (N as Float * N as Float));
 
         uv_mac.self_advect(dt / unit);
         uv_mac.project();

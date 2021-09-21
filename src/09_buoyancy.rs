@@ -31,7 +31,7 @@ fn main() -> anyhow::Result<()> {
 
     let dt: Float = 1.0 / 24.0;
     let unit = 1.0 / N as Float;
-    let k_t = 20.0;
+    let k_t = 0.1;
     let k_s = 0.1;
     let r_t = 1.0;
 
@@ -40,7 +40,7 @@ fn main() -> anyhow::Result<()> {
     let uv_sigma2 = 0.5 * 0.1 * dt;
 
     let alpha = 0.025;
-    let beta = 0.2;
+    let beta = 0.025;
 
     let t_amb = 273.0;
 
@@ -49,11 +49,6 @@ fn main() -> anyhow::Result<()> {
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &s)?;
         // fluid_animations::image::save(f, &((&t - t_amb) / t_amb))?;
-
-        t[[N / 2, N / 2]] +=
-            (1.0 - (-r_t * dt).exp()) * ((25.0) * N as Float * N as Float - t[[N / 2, N / 2]]);
-
-        s[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.5;
 
         // dbg!(t[[N / 2, N / 2]]);
         // dbg!(t.sum() / (N as Float * N as Float));
@@ -66,6 +61,11 @@ fn main() -> anyhow::Result<()> {
         uv_mac.project();
 
         let uv = uv_mac.create_uv();
+
+        t[[N / 2, N / 2]] +=
+            (1.0 - (-r_t * dt).exp()) * ((50.0) * N as Float * N as Float - t[[N / 2, N / 2]]);
+
+        s[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.5;
 
         let mut s1 = gauss_filter(&s, s_sigma2, unit);
         Ghost::Both.set_border(&mut s1);

@@ -3,7 +3,6 @@ use fluid_animations::{
     Float, Ghost,
 };
 use ndarray::prelude::*;
-// use noise::{NoiseFn, Perlin};
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
@@ -11,21 +10,6 @@ fn main() -> anyhow::Result<()> {
 
     let mut s = Array::zeros((N + 2, N + 2));
     let mut t = Array::from_elem((N + 2, N + 2), 273.0);
-
-    /*
-    let perlin = Perlin::new();
-    let freq = 10.0;
-
-    let u = Array::from_shape_fn((N + 3, N + 2), |(i, j)| {
-        perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.5]) * 4.0
-    });
-
-    let v = Array::from_shape_fn((N + 2, N + 3), |(i, j)| {
-        perlin.get([i as f64 / N as f64 * freq, j as f64 / N as f64 * freq, 0.0]) * 4.0
-    });
-
-    let mut uv_mac = Mac::new(u, v);
-    */
 
     let mut uv_mac = Mac::zeros((N + 2, N + 2));
 
@@ -65,7 +49,7 @@ fn main() -> anyhow::Result<()> {
         t[[N / 2, N / 2]] +=
             (1.0 - (-r_t * dt).exp()) * ((50.0) * N as Float * N as Float - t[[N / 2, N / 2]]);
 
-        s[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.5;
+        s[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.2;
 
         let mut s1 = gauss_filter(&s, s_sigma2, unit);
         Ghost::Both.set_border(&mut s1);

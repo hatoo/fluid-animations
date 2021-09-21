@@ -1,7 +1,7 @@
 use num_traits::FloatConst;
 
 use cgmath::{vec2, Vector2};
-use ndarray::{Array, Array2};
+use ndarray::{Array, Array2, Zip};
 
 use crate::{lin_solve, Float, Vector};
 
@@ -38,6 +38,18 @@ impl Mac {
 
             vec2(u, v)
         })
+    }
+
+    pub fn add(&mut self, other: &Mac, dt: Float) {
+        assert_eq!(self.dim(), other.dim());
+
+        Zip::from(&mut self.u).and(&other.u).for_each(|a, &b| {
+            *a += dt * b;
+        });
+
+        Zip::from(&mut self.v).and(&other.v).for_each(|a, &b| {
+            *a += dt * b;
+        });
     }
 
     pub fn self_advect(&mut self, weight: Float) {

@@ -44,6 +44,10 @@ Open images in `out` directory.
 
 ![08_gauss_filter](demos/08_gauss_filter.gif)
 
+## 09_buoyancy
+
+![08_gauss_filter](demos/09_buoyancy.gif)
+
 ## Cheat sheet
 
 Create movie file from pngs

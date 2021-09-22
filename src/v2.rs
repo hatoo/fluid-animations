@@ -5,6 +5,7 @@ use ndarray::{Array, Array2, Zip};
 
 use crate::{lin_solve, Float, Vector};
 
+#[derive(Clone)]
 pub struct Mac {
     u: Array2<Float>,
     v: Array2<Float>,

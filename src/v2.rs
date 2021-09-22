@@ -197,19 +197,11 @@ impl Mac {
 
         let l = dt / (dx);
 
-        let mut d: Float = 0.0;
-
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {
                 self.u[[i, j]] -= l * (p[[i, j]] - p[[i - 1, j]])
                     / (0.5 * (density[[i - 1, j]] + density[[i, j]]));
-
-                d = d.max(
-                    (l * (p[[i, j]] - p[[i - 1, j]])
-                        / (0.5 * (density[[i - 1, j]] + density[[i, j]])))
-                    .abs(),
-                );
             }
         }
 
@@ -217,16 +209,8 @@ impl Mac {
             for j in 1..h {
                 self.v[[i, j]] -= l * (p[[i, j]] - p[[i, j - 1]])
                     / (0.5 * (density[[i, j - 1]] + density[[i, j]]));
-
-                d = d.max(
-                    (l * (p[[i, j]] - p[[i, j - 1]])
-                        / (0.5 * (density[[i, j - 1]] + density[[i, j]])))
-                    .abs(),
-                );
             }
         }
-
-        dbg!(d);
     }
 
     pub fn diffuse(&mut self, a: Float) {

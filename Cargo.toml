@@ -45,6 +45,10 @@ path = "src/09_buoyancy.rs"
 name = "10_project2"
 path = "src/10_project2.rs"
 
+[[bin]]
+name = "11_variable_density"
+path = "src/11_variable_density.rs"
+
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"

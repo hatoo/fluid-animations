@@ -147,6 +147,35 @@ impl Mac {
         }
     }
 
+    pub fn project_variable_density(&mut self, dt: Float, dx: Float, density: &Array2<Float>) {
+        let div = Array::from_shape_fn(self.dim(), |(i, j)| {
+            -0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
+        });
+
+        let mut p = Array::zeros(div.dim());
+
+        let scale = dt / (dx * dx);
+
+        lin_solve_variable_density(&mut p, &div, density, -1.0 * scale, 4.0 * scale);
+
+        let l = dt / (dx);
+
+        let (w, h) = self.dim();
+        for i in 1..w {
+            for j in 0..h {
+                self.u[[i, j]] -= l * (p[[i, j]] - p[[i - 1, j]])
+                    / (0.5 * (density[[i - 1, j]] + density[[i, j]]));
+            }
+        }
+
+        for i in 0..w {
+            for j in 1..h {
+                self.v[[i, j]] -= l * (p[[i, j]] - p[[i, j - 1]])
+                    / (0.5 * (density[[i, j - 1]] + density[[i, j]]));
+            }
+        }
+    }
+
     pub fn diffuse(&mut self, a: Float) {
         let u0 = self.u.clone();
         let v0 = self.v.clone();
@@ -189,6 +218,33 @@ impl Mac {
                 };
 
                 self.v[[i, j]] += (alpha * s - beta * (t - t_amb)) * g;
+            }
+        }
+    }
+}
+
+pub fn lin_solve_variable_density<V: Vector>(
+    x: &mut Array2<V>,
+    x0: &Array2<V>,
+    density: &Array2<Float>,
+    a: Float,
+    c: Float,
+) {
+    assert_eq!(x.dim(), x0.dim());
+    assert_eq!(x.dim(), density.dim());
+
+    // x.clone_from(x0);
+
+    for _ in 0..150 {
+        for i in 1..x.dim().0 - 1 {
+            for j in 1..x.dim().1 - 1 {
+                x[[i, j]] = (x0[[i, j]]
+                    - (x[[i - 1, j]] / density[[i - 1, j]]
+                        + x[[i + 1, j]] / density[[i + 1, j]]
+                        + x[[i, j - 1]] / density[[i, j - 1]]
+                        + x[[i, j + 1]] / density[[i, j + 1]])
+                        * a)
+                    / (c / density[[i, j]]);
             }
         }
     }

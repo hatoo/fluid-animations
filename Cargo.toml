@@ -53,6 +53,10 @@ path = "src/11_variable_density.rs"
 name = "12_divergence_control"
 path = "src/12_divergence_control.rs"
 
+[[bin]]
+name = "13_flame"
+path = "src/13_flame.rs"
+
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"

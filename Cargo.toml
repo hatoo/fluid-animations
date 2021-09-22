@@ -49,6 +49,10 @@ path = "src/10_project2.rs"
 name = "11_variable_density"
 path = "src/11_variable_density.rs"
 
+[[bin]]
+name = "12_divergence_control"
+path = "src/12_divergence_control.rs"
+
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"

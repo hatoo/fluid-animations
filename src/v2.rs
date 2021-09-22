@@ -177,6 +177,58 @@ impl Mac {
         }
     }
 
+    pub fn project_variable_density_div_control(
+        &mut self,
+        dt: Float,
+        dx: Float,
+        density: &Array2<Float>,
+        divergence: &Array2<Float>,
+    ) {
+        let div = Array::from_shape_fn(self.dim(), |(i, j)| {
+            -0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
+                + divergence[[i, j]]
+        });
+
+        let mut p = Array::zeros(div.dim());
+
+        let scale = dt / (dx * dx);
+
+        lin_solve_variable_density(&mut p, &div, density, -1.0 * scale, 4.0 * scale);
+
+        let l = dt / (dx);
+
+        let mut d: Float = 0.0;
+
+        let (w, h) = self.dim();
+        for i in 1..w {
+            for j in 0..h {
+                self.u[[i, j]] -= l * (p[[i, j]] - p[[i - 1, j]])
+                    / (0.5 * (density[[i - 1, j]] + density[[i, j]]));
+
+                d = d.max(
+                    (l * (p[[i, j]] - p[[i - 1, j]])
+                        / (0.5 * (density[[i - 1, j]] + density[[i, j]])))
+                    .abs(),
+                );
+            }
+        }
+
+        for i in 0..w {
+            for j in 1..h {
+                self.v[[i, j]] -= l * (p[[i, j]] - p[[i, j - 1]])
+                    / (0.5 * (density[[i, j - 1]] + density[[i, j]]));
+
+                d = d.max(
+                    (l * (p[[i, j]] - p[[i, j - 1]])
+                        / (0.5 * (density[[i, j - 1]] + density[[i, j]])))
+                    .abs(),
+                );
+            }
+        }
+
+        dbg!(d);
+    }
+
     pub fn diffuse(&mut self, a: Float) {
         let u0 = self.u.clone();
         let v0 = self.v.clone();

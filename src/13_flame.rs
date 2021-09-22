@@ -3,11 +3,10 @@ use fluid_animations::{
     Float, Ghost,
 };
 use ndarray::{prelude::*, Zip};
-use num_traits::FloatConst;
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
-    const N_FRAME: usize = 64;
+    const N_FRAME: usize = 128;
 
     let t_amb = 273.0;
 
@@ -20,14 +19,12 @@ fn main() -> anyhow::Result<()> {
     let unit = 1.0 / N as Float;
     let k_t = 0.01;
     let k_fuel = 0.025;
-    let r_t = 1.0;
 
     let t_sigma2 = 0.5 * k_t * dt;
     let fuel_sigma2 = 0.5 * k_fuel * dt;
     let uv_sigma2 = 0.5 * 0.1 * dt;
 
-    let alpha = 0.1; // (2.0 - 1.251) / 1.251;
-                     // let beta = 0.004;
+    let alpha = 0.1;
 
     let g = 9.8;
 
@@ -39,7 +36,7 @@ fn main() -> anyhow::Result<()> {
 
     let c = 1.0;
 
-    t[[N / 2, N / 2]] = 10000.0; // += (1.0 - (-r_t * dt).exp()) * (t_max - t[[N / 2, N / 2]]);
+    t[[N / 2, N / 2]] = 10000.0;
     fuel[[N / 2, N / 2]] = 100.0;
 
     for f in 1..N_FRAME + 1 {
@@ -65,14 +62,7 @@ fn main() -> anyhow::Result<()> {
             1.01e5 / (285.0 * t[[i, j]]) * (1.0 + alpha * fuel[[i, j]])
         });
 
-        let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| {
-            /*
-            let delta = density[[i, j]] - prev_density[[i, j]];
-
-            -1.0 / dt * delta / density[[i, j]]
-            */
-            d_fuel[[i, j]] / dt
-        });
+        let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] / dt);
 
         /*
         dbg!(density[[N / 2, N / 2]]);
@@ -83,7 +73,6 @@ fn main() -> anyhow::Result<()> {
         uv_mac.self_advect(dt / unit);
         uv_mac.gauss_filter(uv_sigma2, unit);
         uv_mac.buoyancy2(&density, density_amb, g * dt);
-        // uv_mac.project_variable_density(dt, unit, &density);
         uv_mac.project_variable_density_div_control(dt, unit, &density, &div);
 
         let uv = uv_mac.create_uv();
@@ -92,10 +81,10 @@ fn main() -> anyhow::Result<()> {
             *a -= b;
         });
 
-        fuel[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.1;
+        fuel[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.125;
 
         Zip::from(&mut t).and(&d_fuel).for_each(|a, &b| {
-            *a += 2000.0 * b;
+            *a += 1000.0 * b;
         });
 
         let mut s1 = gauss_filter(&fuel, fuel_sigma2, unit);

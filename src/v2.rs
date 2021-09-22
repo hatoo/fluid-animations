@@ -221,6 +221,24 @@ impl Mac {
             }
         }
     }
+
+    pub fn buoyancy2(&mut self, density: &Array2<Float>, density_amb: Float, g: Float) {
+        let (w, h) = self.dim();
+
+        for i in 0..w {
+            for j in 0..h + 1 {
+                let d = {
+                    let up = if j == 0 { 0.0 } else { density[[i, j - 1]] };
+
+                    let down = if j == h { 0.0 } else { density[[i, j]] };
+
+                    0.5 * (up + down)
+                };
+
+                self.v[[i, j]] += (d - density_amb) / d * g;
+            }
+        }
+    }
 }
 
 pub fn lin_solve_variable_density<V: Vector>(

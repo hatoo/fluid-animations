@@ -23,14 +23,14 @@ fn main() -> anyhow::Result<()> {
     let s_sigma2 = 0.5 * k_s * dt;
     let uv_sigma2 = 0.5 * 0.1 * dt;
 
-    let alpha = (2.0 - 1.251) / 1.251;
-    let beta = 0.004;
+    let alpha = 0.1; // (2.0 - 1.251) / 1.251;
+                     // let beta = 0.004;
 
     let t_amb = 273.0;
 
     let g = 9.8;
 
-    let density0 = 1.01e5 / (285.0 * 273.0);
+    let density_amb = 1.01e5 / (285.0 * t_amb);
 
     for f in 1..N_FRAME + 1 {
         fluid_animations::image::save(f, &s)?;
@@ -40,23 +40,26 @@ fn main() -> anyhow::Result<()> {
         // dbg!(t.sum() / (N as Float * N as Float));
 
         let density = Array::from_shape_fn(s.dim(), |(i, j)| {
-            (density0 * (1.0 + alpha * s[[i, j]] - beta * (t[[i, j]] - t_amb))).max(0.05)
+            // (density0 * (1.0 + alpha * s[[i, j]] - beta * (t[[i, j]] - t_amb))).max(0.05)
+            // density0 * (1.0 + alpha * s[[i, j]]) * (1.0 + beta * (t[[i, j]] - t_amb))
+            1.01e5 / (285.0 * t[[i, j]]) * (1.0 + alpha * s[[i, j]])
         });
 
+        /*
         dbg!(density[[N / 2, N / 2]]);
         dbg!(t[[N / 2, N / 2]]);
+        dbg!(s[[N / 2, N / 2]]);
+        */
 
         uv_mac.self_advect(dt / unit);
         uv_mac.gauss_filter(uv_sigma2, unit);
-        uv_mac.buoyancy(&s, &t, alpha, beta, t_amb, g * dt);
-        // uv_mac.project();
+        uv_mac.buoyancy2(&density, density_amb, g * dt);
         uv_mac.project_variable_density(dt, unit, &density);
-        // uv_mac.project2(dt, unit, 1.0);
 
         let uv = uv_mac.create_uv();
 
         t[[N / 2, N / 2]] +=
-            (1.0 - (-r_t * dt).exp()) * ((6.0) * N as Float * N as Float - t[[N / 2, N / 2]]);
+            (1.0 - (-r_t * dt).exp()) * ((10.0) * N as Float * N as Float - t[[N / 2, N / 2]]);
 
         s[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.025;
 

@@ -11,7 +11,7 @@ fn main() -> anyhow::Result<()> {
 
     let t_amb = 273.0;
 
-    let mut fuel = Array::zeros((N + 2, N + 2));
+    let mut fuel = Array::from_elem((N + 2, N + 2), 0.2);
     let mut t = Array::from_elem((N + 2, N + 2), t_amb);
 
     let mut uv_mac = Mac::zeros((N + 2, N + 2));

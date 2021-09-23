@@ -1,56 +1,46 @@
 use fluid_animations::{
-    v2::{advect, gauss_filter, gauss_filter_amb, Mac},
+    v2::{advect, Mac},
     Float, Ghost,
 };
 use ndarray::prelude::*;
 
 fn main() -> anyhow::Result<()> {
-    const N: usize = 3;
+    const N: usize = 400;
+    const N_FRAME: usize = 64;
 
-    let u = array![
-        [0.0, 0.0, 0.0],
-        [0.0, -1.0, 0.0],
-        [0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0],
-    ];
+    let mut x0 = Array::from_elem((N + 2, N + 2), 0.1);
 
-    let v = array![
-        [0.0, 0.0, 0.0, 0.0],
-        [0.0, -1.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0, 0.0],
-    ];
+    let mut mac = Mac::zeros((N + 2, N + 2));
 
-    let mut uv_mac = Mac::new(u, v);
-    let mut uv_mac = Mac::zeros((N, N));
-
-    dbg!(uv_mac.create_uv());
-
-    let dt: Float = 1.0 / 24.0;
+    let dt = 1.0 / 24.0;
     let unit = 1.0 / N as Float;
 
-    let density = Array::from_elem((N, N), 1.0);
+    let density = Array::from_elem((N + 2, N + 2), 1.0);
 
-    let mut div = Array::zeros((N, N));
+    for f in 1..N_FRAME + 1 {
+        fluid_animations::image::save(f, &x0)?;
+        x0[[N / 2, N / 2]] += dt * 100.0;
 
-    div[[N / 2, N / 2]] = 10.0;
+        let mut div = Array::zeros((N + 2, N + 2));
 
-    dbg!(uv_mac.div());
-    dbg!(uv_mac.create_uv());
+        div[[N / 2, N / 2]] = 4000.0;
 
-    // uv_mac.project_variable_density_div_control(dt, unit, &density, &div);
-    uv_mac.project_variable_density(dt, unit, &density);
-    // uv_mac.project();
-    /*
-    uv_mac.self_advect(dt / unit);
-    uv_mac.gauss_filter(uv_sigma2, unit);
-    uv_mac.project_variable_density_div_control(dt, unit, &density, &div);
-    */
+        // mac.gauss_filter(sigma2, unit);
+        mac.self_advect(dt / unit);
+        mac.project_variable_density_div_control(dt, unit, &density, &div);
 
-    dbg!(uv_mac.div());
+        let uv = mac.create_uv();
 
-    let uv = uv_mac.create_uv();
+        // let mut x = gauss_filter(&x0, s_sigma2, unit);
+        let mut x = x0.clone();
+        Ghost::Both.set_border(&mut x);
+        std::mem::swap(&mut x, &mut x0);
+        advect(&mut x, &x0, &uv, dt / unit);
+        Ghost::Both.set_border(&mut x);
+        std::mem::swap(&mut x, &mut x0);
 
-    dbg!(&uv);
+        eprint!("\rframe: {} / {} done", f, N_FRAME);
+    }
 
     Ok(())
 }

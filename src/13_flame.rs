@@ -6,7 +6,7 @@ use ndarray::{prelude::*, Zip};
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
-    const N_FRAME: usize = 128;
+    const N_FRAME: usize = 64;
 
     let t_amb = 273.0;
 
@@ -83,9 +83,12 @@ fn main() -> anyhow::Result<()> {
 
         fuel[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.125;
 
-        Zip::from(&mut t).and(&d_fuel).for_each(|a, &b| {
-            *a += 1000.0 * b;
-        });
+        Zip::from(&mut t)
+            .and(&d_fuel)
+            .and(&density)
+            .for_each(|a, &b, &c| {
+                *a += 600.0 * b / c;
+            });
 
         let mut s1 = gauss_filter(&fuel, fuel_sigma2, unit);
         Ghost::Both.set_border(&mut s1);

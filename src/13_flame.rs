@@ -62,7 +62,7 @@ fn main() -> anyhow::Result<()> {
             1.01e5 / (285.0 * t[[i, j]]) * (1.0 + alpha * fuel[[i, j]])
         });
 
-        let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] / dt);
+        let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] * 0.5);
 
         /*
         dbg!(density[[N / 2, N / 2]]);

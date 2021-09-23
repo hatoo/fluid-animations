@@ -102,13 +102,13 @@ impl Mac {
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {
-                self.u[[i, j]] += 0.5 * (p[[i, j]] - p[[i - 1, j]]);
+                self.u[[i, j]] += 2.0 * (p[[i, j]] - p[[i - 1, j]]);
             }
         }
 
         for i in 0..w {
             for j in 1..h {
-                self.v[[i, j]] += 0.5 * (p[[i, j]] - p[[i, j - 1]]);
+                self.v[[i, j]] += 2.0 * (p[[i, j]] - p[[i, j - 1]]);
             }
         }
     }
@@ -137,13 +137,13 @@ impl Mac {
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {
-                self.u[[i, j]] -= l * (p[[i, j]] - p[[i - 1, j]]);
+                self.u[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i - 1, j]]);
             }
         }
 
         for i in 0..w {
             for j in 1..h {
-                self.v[[i, j]] -= l * (p[[i, j]] - p[[i, j - 1]]);
+                self.v[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i, j - 1]]);
             }
         }
     }
@@ -164,14 +164,14 @@ impl Mac {
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {
-                self.u[[i, j]] -= l * (p[[i, j]] - p[[i - 1, j]])
+                self.u[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i - 1, j]])
                     / (0.5 * (density[[i - 1, j]] + density[[i, j]]));
             }
         }
 
         for i in 0..w {
             for j in 1..h {
-                self.v[[i, j]] -= l * (p[[i, j]] - p[[i, j - 1]])
+                self.v[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i, j - 1]])
                     / (0.5 * (density[[i, j - 1]] + density[[i, j]]));
             }
         }
@@ -186,7 +186,7 @@ impl Mac {
     ) {
         let div = Array::from_shape_fn(self.dim(), |(i, j)| {
             -0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
-                + divergence[[i, j]]
+                + 3.0 * divergence[[i, j]]
         });
 
         let mut p = Array::zeros(div.dim());
@@ -200,14 +200,14 @@ impl Mac {
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {
-                self.u[[i, j]] -= l * (p[[i, j]] - p[[i - 1, j]])
+                self.u[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i - 1, j]])
                     / (0.5 * (density[[i - 1, j]] + density[[i, j]]));
             }
         }
 
         for i in 0..w {
             for j in 1..h {
-                self.v[[i, j]] -= l * (p[[i, j]] - p[[i, j - 1]])
+                self.v[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i, j - 1]])
                     / (0.5 * (density[[i, j - 1]] + density[[i, j]]));
             }
         }

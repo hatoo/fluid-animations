@@ -54,6 +54,10 @@ name = "12_divergence_control"
 path = "src/12_divergence_control.rs"
 
 [[bin]]
+name = "12a_test_project"
+path = "src/12a_test_project.rs"
+
+[[bin]]
 name = "13_flame"
 path = "src/13_flame.rs"
 

@@ -38,9 +38,7 @@ fn main() -> anyhow::Result<()> {
         // dbg!(t.sum() / (N as Float * N as Float));
 
         uv_mac.self_advect(dt / unit);
-        uv_mac.project();
         uv_mac.gauss_filter(uv_sigma2, unit);
-        uv_mac.project();
         uv_mac.buoyancy(&s, &t, alpha, beta, t_amb, g * dt);
         uv_mac.project();
 

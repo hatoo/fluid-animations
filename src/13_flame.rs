@@ -83,9 +83,11 @@ fn main() -> anyhow::Result<()> {
         });
 
         // let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] / dt / 3.0);
-        let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| {
+        let mut div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| {
             -1.0 / dt * (density[[i, j]] - prev_density[[i, j]]) / density[[i, j]]
         });
+
+        div[[N / 2, N / 2]] += 10000.0;
 
         /*
         dbg!(density[[N / 2, N / 2]]);

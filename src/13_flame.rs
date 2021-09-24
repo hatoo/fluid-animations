@@ -54,7 +54,12 @@ fn main() -> anyhow::Result<()> {
             }
         });
 
-        fluid_animations::image::save(f, &d_fuel)?;
+        fluid_animations::image::save(
+            f,
+            &Array::from_shape_fn(fuel.dim(), |(i, j)| {
+                (t[[i, j]] - t_amb) / 750.0 * fuel[[i, j]]
+            }),
+        )?;
 
         let density = Array::from_shape_fn(fuel.dim(), |(i, j)| {
             // (density_amb * (1.0 + alpha * s[[i, j]] - beta * (t[[i, j]] - t_amb))).max(0.05)
@@ -62,7 +67,7 @@ fn main() -> anyhow::Result<()> {
             1.01e5 / (285.0 * t[[i, j]]) * (1.0 + alpha * fuel[[i, j]])
         });
 
-        let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] * 0.5);
+        let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] / dt / 3.0);
 
         /*
         dbg!(density[[N / 2, N / 2]]);
@@ -71,7 +76,7 @@ fn main() -> anyhow::Result<()> {
         */
 
         uv_mac.self_advect(dt / unit);
-        uv_mac.gauss_filter(uv_sigma2, unit);
+        // uv_mac.gauss_filter(uv_sigma2, unit);
         uv_mac.buoyancy2(&density, density_amb, g * dt);
         uv_mac.project_variable_density_div_control(dt, unit, &density, &div);
 

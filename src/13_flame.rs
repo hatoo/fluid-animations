@@ -32,11 +32,11 @@ fn main() -> anyhow::Result<()> {
 
     let density_amb = 1.01e5 / (285.0 * t_amb);
 
-    let z = 0.05;
+    let z = 1.0;
     let t_ignite = t_amb + 30.0;
     let t_max = 1000.0;
 
-    let c = 100.0;
+    let c = 1.0;
 
     t[[N / 2, N / 2]] = 10000.0;
     fuel[[N / 2, N / 2]] = 100.0;
@@ -56,7 +56,7 @@ fn main() -> anyhow::Result<()> {
             //if fuel[[i, j]] > 0.0 {
             //cnt += 1;
             //}
-            (z * dt * fuel[[i, j]]).min(fuel[[i, j]])
+            (z * dt).min(fuel[[i, j]])
             //} else {
             //0.0
             //}
@@ -134,7 +134,7 @@ fn main() -> anyhow::Result<()> {
             .and(&d_fuel)
             .and(&density)
             .for_each(|a, &b, &c| {
-                *a += 80000.0 * b / c;
+                *a += 8000.0 * b / c;
             });
 
         let mut s1 = Array::zeros(fuel.dim());

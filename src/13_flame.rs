@@ -129,7 +129,7 @@ fn main() -> anyhow::Result<()> {
 
         fuel[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.25;
 
-        // uv[[N / 2, N / 2]] = vec2(0.0, -4.0);
+        uv[[N / 2, N / 2]] = vec2(0.0, -4.0);
 
         // dbg!(uv[[N / 2, N / 2]]);
 

@@ -265,9 +265,13 @@ impl Mac {
         for i in 0..w {
             for j in 0..h + 1 {
                 let d = {
-                    let up = if j == 0 { 0.0 } else { density[[i, j - 1]] };
+                    let up = if j == 0 {
+                        density_amb
+                    } else {
+                        density[[i, j - 1]]
+                    };
 
-                    let down = if j == h { 0.0 } else { density[[i, j]] };
+                    let down = if j == h { density_amb } else { density[[i, j]] };
 
                     0.5 * (up + down)
                 };

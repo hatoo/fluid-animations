@@ -32,11 +32,11 @@ fn main() -> anyhow::Result<()> {
 
     let density_amb = 1.01e5 / (285.0 * t_amb);
 
-    let z = 1.0;
-    let t_ignite = t_amb + 30.0;
-    let t_max = 1000.0;
+    let z = 7.5;
+    let t_ignite = 0.0; //t_amb + 30.0;
+    let t_max = 2000.0;
 
-    let c = 1.0;
+    let c = 0.1;
 
     t[[N / 2, N / 2]] = 10000.0;
     fuel[[N / 2, N / 2]] = 100.0;
@@ -52,14 +52,15 @@ fn main() -> anyhow::Result<()> {
 
         let mut cnt = 0;
         let d_fuel = Array::from_shape_fn(fuel.dim(), |(i, j)| {
-            // if t[[i, j]] > t_ignite {
-            //if fuel[[i, j]] > 0.0 {
-            //cnt += 1;
-            //}
-            (z * dt).min(fuel[[i, j]])
-            //} else {
-            //0.0
-            //}
+            if t[[i, j]] > t_ignite {
+                if fuel[[i, j]] > 0.0 {
+                    cnt += 1;
+                }
+
+                (z * dt).min(fuel[[i, j]])
+            } else {
+                0.0
+            }
         });
 
         dbg!(cnt);
@@ -67,7 +68,7 @@ fn main() -> anyhow::Result<()> {
         fluid_animations::image::save(
             f,
             &Array::from_shape_fn(fuel.dim(), |(i, j)| {
-                (t[[i, j]] - t_amb) / 750.0 * fuel[[i, j]]
+                (t[[i, j]] - t_amb) / t_max * (fuel[[i, j]])
             }),
         )?;
 
@@ -109,14 +110,12 @@ fn main() -> anyhow::Result<()> {
             .fold(0.0 as Float, |a, &b| { a.max(b.abs()) }));
             */
 
-        let uv = uv_mac.create_uv();
+        let mut uv = uv_mac.create_uv();
 
-        /*
         uv = uv.map(|v| {
-            let m = v.magnitude().min(1.0);
+            let m = v.magnitude().min(4.0);
             v * m / v.magnitude()
         });
-        */
 
         dbg!(uv.iter().fold(0.0 as Float, |a, &b| a.max(b.magnitude())));
 
@@ -124,7 +123,9 @@ fn main() -> anyhow::Result<()> {
             *a -= b;
         });
 
-        fuel[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.1;
+        dbg!(fuel.iter().fold(0.0 as Float, |a, &b| a.max(b)));
+
+        fuel[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.25;
 
         // uv[[N / 2, N / 2]] = vec2(0.0, -4.0);
 
@@ -134,7 +135,7 @@ fn main() -> anyhow::Result<()> {
             .and(&d_fuel)
             .and(&density)
             .for_each(|a, &b, &c| {
-                *a += 8000.0 * b / c;
+                *a += 100.0 / (z * dt) * b / c;
             });
 
         let mut s1 = Array::zeros(fuel.dim());
@@ -163,7 +164,7 @@ fn main() -> anyhow::Result<()> {
 
         prev_density = density;
 
-        // dbg!(t.iter().fold(0.0 as Float, |a, &b| a.max(b)));
+        dbg!(t.iter().fold(0.0 as Float, |a, &b| a.max(b)));
 
         eprint!("\rframe: {} / {} done", f, N_FRAME);
     }

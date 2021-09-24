@@ -7,8 +7,8 @@ use crate::{lin_solve, Float, Vector};
 
 #[derive(Clone)]
 pub struct Mac {
-    u: Array2<Float>,
-    v: Array2<Float>,
+    pub u: Array2<Float>,
+    pub v: Array2<Float>,
 }
 
 impl Mac {
@@ -262,6 +262,7 @@ impl Mac {
     pub fn buoyancy2(&mut self, density: &Array2<Float>, density_amb: Float, g: Float) {
         let (w, h) = self.dim();
 
+        let mut x: Float = 0.0;
         for i in 0..w {
             for j in 0..h + 1 {
                 let d = {
@@ -277,8 +278,11 @@ impl Mac {
                 };
 
                 self.v[[i, j]] += (d - density_amb) / d * g;
+                x = x.max(((d - density_amb) / d * g).abs());
             }
         }
+
+        dbg!(x);
     }
 }
 

@@ -112,10 +112,12 @@ fn main() -> anyhow::Result<()> {
 
         let mut uv = uv_mac.create_uv();
 
+        /*
         uv = uv.map(|v| {
             let m = v.magnitude().min(4.0);
             v * m / v.magnitude()
         });
+        */
 
         dbg!(uv.iter().fold(0.0 as Float, |a, &b| a.max(b.magnitude())));
 

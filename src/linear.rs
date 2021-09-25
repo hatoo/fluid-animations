@@ -342,8 +342,12 @@ mod test {
     use ndarray::{array, Array, Array2};
     use ndarray_linalg::{assert_close_l1, solve::Solve};
 
-    use crate::{linear::lin_solve, Float};
+    use crate::{
+        linear::{lin_solve, lin_solve_pcg},
+        Float,
+    };
 
+    #[allow(dead_code)]
     fn lin_solve_by_linalg(x0: &Array2<Float>, a: Float, c: Float) -> Array2<Float> {
         let (w, h) = x0.dim();
         let m = get_matrix(w, h, a, c);
@@ -355,6 +359,7 @@ mod test {
         ans.into_shape((w, h)).unwrap()
     }
 
+    #[allow(dead_code)]
     fn rev(ans: &Array2<Float>, a: Float, c: Float) -> Array2<Float> {
         let (w, h) = ans.dim();
         Array::from_shape_fn(ans.dim(), |(i, j)| {
@@ -412,6 +417,17 @@ mod test {
         let mut t = Array::zeros(b.dim());
 
         lin_solve(&mut t, &b, -1.0, 4.0);
+        // let ans = lin_solve_by_linalg(&b, -1.0, 4.0);
+
+        assert_close_l1!(&rev(&t, -1.0, 4.0), &b, 1e-5);
+    }
+
+    #[test]
+    fn lin_sovle_pcg() {
+        let b = array![[0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0],];
+        let mut t = Array::zeros(b.dim());
+
+        lin_solve_pcg(&mut t, &b, -1.0, 4.0);
         // let ans = lin_solve_by_linalg(&b, -1.0, 4.0);
 
         assert_close_l1!(&rev(&t, -1.0, 4.0), &b, 1e-5);

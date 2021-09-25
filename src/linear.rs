@@ -121,6 +121,8 @@ fn apply_precon(z: &mut Array2<Float>, r: &Array2<Float>, a: Float, c: Float) {
 pub fn lin_solve_pcg(p: &mut Array2<Float>, d: &Array2<Float>, a: Float, c: Float) {
     assert_eq!(p.dim(), d.dim());
 
+    let tol = 1e-6 * d.iter().fold(0.0 as Float, |a, &b| a.max(b));
+
     let mut r = d.clone();
     let mut z = Array::zeros(p.dim());
     apply_precon(&mut z, &r, a, c);
@@ -140,7 +142,7 @@ pub fn lin_solve_pcg(p: &mut Array2<Float>, d: &Array2<Float>, a: Float, c: Floa
             *a -= alpha * b;
         });
 
-        if r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())) < 1e-3 {
+        if r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())) < tol {
             dbg!("early return");
             return;
         }
@@ -257,6 +259,8 @@ pub fn lin_solve_pcg2(
 ) {
     assert_eq!(p.dim(), d.dim());
 
+    let tol = 1e-6 * d.iter().fold(0.0 as Float, |a, &b| a.max(b));
+
     let mut r = d.clone();
     let mut z = Array::zeros(p.dim());
     apply_precon2(&mut z, &r, a, c);
@@ -276,7 +280,7 @@ pub fn lin_solve_pcg2(
             *a -= alpha * b;
         });
 
-        if r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())) < 1e-3 {
+        if r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())) < tol {
             dbg!("early return");
             return;
         }

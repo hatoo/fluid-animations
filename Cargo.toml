@@ -5,62 +5,6 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[[bin]]
-name = "01_diffuse"
-path = "src/01_diffuse.rs"
-
-[[bin]]
-name = "02_dens_step"
-path = "src/02_dens_step.rs"
-
-[[bin]]
-name = "03_vector_noise"
-path = "src/03_vector_noise.rs"
-
-[[bin]]
-name = "04_multiple_densities"
-path = "src/04_multiple_densities.rs"
-
-[[bin]]
-name = "05_vel_step"
-path = "src/05_vel_step.rs"
-
-[[bin]]
-name = "06_advect_improved"
-path = "src/06_advect_improved.rs"
-
-[[bin]]
-name = "07_mac_uv"
-path = "src/07_mac_uv.rs"
-
-[[bin]]
-name = "08_gauss_filter"
-path = "src/08_gauss_filter.rs"
-
-[[bin]]
-name = "09_buoyancy"
-path = "src/09_buoyancy.rs"
-
-[[bin]]
-name = "10_project2"
-path = "src/10_project2.rs"
-
-[[bin]]
-name = "11_variable_density"
-path = "src/11_variable_density.rs"
-
-[[bin]]
-name = "12_divergence_control"
-path = "src/12_divergence_control.rs"
-
-[[bin]]
-name = "12a_test_project"
-path = "src/12a_test_project.rs"
-
-[[bin]]
-name = "13_flame"
-path = "src/13_flame.rs"
-
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.23"

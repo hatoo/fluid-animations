@@ -1,4 +1,4 @@
-use ndarray::{Array, Array2};
+use ndarray::{Array, Array2, Zip};
 
 use crate::Float;
 
@@ -72,32 +72,33 @@ pub fn lin_solve_pcg(p: &mut Array2<Float>, b: &Array2<Float>, a: Float, c: Floa
 
     let mut sigma = dot_product(&z, &r);
 
-    let (w, h) = p.dim();
-
     for _ in 0..200 {
-        for i in 0..w {
-            for j in 0..h {
-                let mut t = 0.0;
+        apply_a(&mut z, &s, a, c);
+        let alpha = sigma / dot_product(&z, &s);
 
-                if i > 0 {
-                    t = t + p[[i - 1, j]];
-                }
+        Zip::from(&mut *p).and(&s).for_each(|a, &b| {
+            *a += alpha * b;
+        });
 
-                if i + 1 < w {
-                    t = t + p[[i + 1, j]];
-                }
+        Zip::from(&mut r).and(&z).for_each(|a, &b| {
+            *a -= alpha * b;
+        });
 
-                if j > 0 {
-                    t = t + p[[i, j - 1]];
-                }
-
-                if j + 1 < h {
-                    t = t + p[[i, j + 1]];
-                }
-
-                p[[i, j]] = (b[[i, j]] - t * a) / c;
-            }
+        if r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())) < 1e-3 {
+            dbg!("early return");
+            return;
         }
+
+        z = r.clone();
+
+        let sigma_new = dot_product(&z, &r);
+        let beta = sigma_new / sigma;
+
+        Zip::from(&mut s).and(&z).for_each(|a, &b| {
+            *a = b + beta * *a;
+        });
+
+        sigma = sigma_new;
     }
 }
 

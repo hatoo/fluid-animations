@@ -101,7 +101,9 @@ impl Mac {
         linear::lin_solve(&mut p, &div, -1.0, 4.0);
 
         let rev = crate::linear::rev(&div, -1.0, 4.0);
-        dbg!((rev - &div).iter().map(|f| f.abs()).sum::<Float>());
+        dbg!((rev - &div)
+            .iter()
+            .fold(0.0 as Float, |a, b| a.max(b.abs())));
 
         let (w, h) = self.dim();
         for i in 1..w {
@@ -345,7 +347,7 @@ pub fn lin_solve_variable_density(
     }
 
     let rev = linear::rev_density(x, density, a, c);
-    dbg!((rev - x0).iter().map(|f| f.abs()).sum::<Float>());
+    dbg!((rev - x0).iter().fold(0.0 as Float, |a, b| a.max(b.abs())));
 }
 
 pub fn interpolate_linear<V: Vector>(q: &Array2<V>, ij: Vector2<Float>) -> V {

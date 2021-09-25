@@ -3,7 +3,7 @@ use num_traits::FloatConst;
 use cgmath::{vec2, Vector2};
 use ndarray::{Array, Array2, Zip};
 
-use crate::{lin_solve, Float, Vector};
+use crate::{lin_solve, linear, Float, Vector};
 
 #[derive(Clone)]
 pub struct Mac {
@@ -286,9 +286,9 @@ impl Mac {
     }
 }
 
-pub fn lin_solve_variable_density<V: Vector>(
-    x: &mut Array2<V>,
-    x0: &Array2<V>,
+pub fn lin_solve_variable_density(
+    x: &mut Array2<Float>,
+    x0: &Array2<Float>,
     density: &Array2<Float>,
     a: Float,
     c: Float,
@@ -317,7 +317,7 @@ pub fn lin_solve_variable_density<V: Vector>(
     for _ in 0..150 {
         for i in 0..w {
             for j in 0..h {
-                let mut t = V::zero();
+                let mut t = 0.0;
 
                 if i > 0 {
                     t = t + x[[i - 1, j]] / density[[i - 1, j]];
@@ -339,6 +339,9 @@ pub fn lin_solve_variable_density<V: Vector>(
             }
         }
     }
+
+    // let rev = linear::rev_density(x, density, a, c);
+    // dbg!((rev - x0).iter().map(|f| f.abs()).sum::<Float>());
 }
 
 pub fn interpolate_linear<V: Vector>(q: &Array2<V>, ij: Vector2<Float>) -> V {

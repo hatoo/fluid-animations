@@ -1,4 +1,4 @@
-use ndarray::Array2;
+use ndarray::{Array, Array2};
 
 use crate::{Float, Vector};
 
@@ -34,10 +34,63 @@ pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float, c: Floa
     }
 }
 
+pub fn rev(ans: &Array2<Float>, a: Float, c: Float) -> Array2<Float> {
+    let (w, h) = ans.dim();
+    Array::from_shape_fn(ans.dim(), |(i, j)| {
+        let mut t = c * ans[[i, j]];
+
+        if i > 0 {
+            t += a * ans[[i - 1, j]];
+        }
+
+        if i + 1 < w {
+            t += a * ans[[i + 1, j]];
+        }
+
+        if j > 0 {
+            t += a * ans[[i, j - 1]];
+        }
+
+        if j + 1 < h {
+            t += a * ans[[i, j + 1]];
+        }
+        t
+    })
+}
+
+pub fn rev_density(
+    ans: &Array2<Float>,
+    density: &Array2<Float>,
+    a: Float,
+    c: Float,
+) -> Array2<Float> {
+    let (w, h) = ans.dim();
+    Array::from_shape_fn(ans.dim(), |(i, j)| {
+        let mut t = c * ans[[i, j]] / density[[i, j]];
+
+        if i > 0 {
+            t += a * ans[[i - 1, j]] / density[[i - 1, j]];
+        }
+
+        if i + 1 < w {
+            t += a * ans[[i + 1, j]] / density[[i + 1, j]];
+        }
+
+        if j > 0 {
+            t += a * ans[[i, j - 1]] / density[[i, j - 1]];
+        }
+
+        if j + 1 < h {
+            t += a * ans[[i, j + 1]] / density[[i, j + 1]];
+        }
+        t
+    })
+}
+
 #[cfg(test)]
 mod test {
     use ndarray::{array, Array, Array2};
-    use ndarray_linalg::solve::Solve;
+    use ndarray_linalg::{assert_close_l1, solve::Solve};
 
     use crate::{linear::lin_solve, Float};
 
@@ -109,9 +162,8 @@ mod test {
         let mut t = Array::zeros(b.dim());
 
         lin_solve(&mut t, &b, -1.0, 4.0);
-        let ans = lin_solve_by_linalg(&b, -1.0, 4.0);
+        // let ans = lin_solve_by_linalg(&b, -1.0, 4.0);
 
-        dbg!(rev(&t, -1.0, 4.0));
-        dbg!(rev(&ans, -1.0, 4.0));
+        assert_close_l1!(&rev(&t, -1.0, 4.0), &b, 1e-5);
     }
 }

@@ -298,6 +298,7 @@ pub fn lin_solve_variable_density<V: Vector>(
 
     // x.clone_from(x0);
 
+    /*
     for _ in 0..150 {
         for i in 1..x.dim().0 - 1 {
             for j in 1..x.dim().1 - 1 {
@@ -308,6 +309,33 @@ pub fn lin_solve_variable_density<V: Vector>(
                         + x[[i, j + 1]] / density[[i, j + 1]])
                         * a)
                     / (c / density[[i, j]]);
+            }
+        }
+    }
+    */
+    let (w, h) = x.dim();
+    for _ in 0..150 {
+        for i in 0..w {
+            for j in 0..h {
+                let mut t = V::zero();
+
+                if i > 0 {
+                    t = t + x[[i - 1, j]] / density[[i - 1, j]];
+                }
+
+                if i + 1 < w {
+                    t = t + x[[i + 1, j]] / density[[i + 1, j]];
+                }
+
+                if j > 0 {
+                    t = t + x[[i, j - 1]] / density[[i, j - 1]];
+                }
+
+                if j + 1 < h {
+                    t = t + x[[i, j + 1]] / density[[i, j + 1]];
+                }
+
+                x[[i, j]] = (x0[[i, j]] - t * a) / (c / density[[i, j]]);
             }
         }
     }

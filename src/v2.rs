@@ -100,6 +100,9 @@ impl Mac {
         // lin_solve(&mut p, &div, 1.0, 4.0);
         linear::lin_solve(&mut p, &div, -1.0, 4.0);
 
+        let rev = crate::linear::rev(&div, -1.0, 4.0);
+        dbg!((rev - &div).iter().map(|f| f.abs()).sum::<Float>());
+
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {

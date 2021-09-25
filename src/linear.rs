@@ -32,9 +32,10 @@ pub fn lin_solve(x: &mut Array2<Float>, x0: &Array2<Float>, a: Float, c: Float) 
             }
         }
     }
+}
 
-    let rev = rev(x, a, c);
-    dbg!((rev - x0).iter().map(|f| f.abs()).sum::<Float>());
+pub fn lin_solve_pcg(x: &mut Array2<Float>, x0: &Array2<Float>, a: Float, c: Float) {
+    todo!()
 }
 
 pub fn rev(ans: &Array2<Float>, a: Float, c: Float) -> Array2<Float> {

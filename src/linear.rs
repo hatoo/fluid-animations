@@ -70,6 +70,8 @@ fn apply_precon(z: &mut Array2<Float>, r: &Array2<Float>, a: Float, c: Float) {
     let (w, h) = z.dim();
     let mut precon = Array::from_elem(z.dim(), 0.0 as Float);
 
+    z.fill(0.0);
+
     for i in 1..w {
         for j in 1..h {
             let e = c
@@ -103,7 +105,7 @@ fn apply_precon(z: &mut Array2<Float>, r: &Array2<Float>, a: Float, c: Float) {
             assert!(q[[i, j]].is_finite());
         }
     }
-    dbg!(q.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+    // dbg!(q.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
     for i in (0..w - 1).rev() {
         for j in (0..h - 1).rev() {
             let t =
@@ -113,7 +115,7 @@ fn apply_precon(z: &mut Array2<Float>, r: &Array2<Float>, a: Float, c: Float) {
             assert!(z[[i, j]].is_finite());
         }
     }
-    dbg!(z.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+    // dbg!(z.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
 }
 
 pub fn lin_solve_pcg(p: &mut Array2<Float>, d: &Array2<Float>, a: Float, c: Float) {

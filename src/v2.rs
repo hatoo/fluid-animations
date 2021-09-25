@@ -97,7 +97,8 @@ impl Mac {
 
         let mut p = Array::zeros(div.dim());
 
-        lin_solve(&mut p, &div, 1.0, 4.0);
+        // lin_solve(&mut p, &div, 1.0, 4.0);
+        linear::lin_solve(&mut p, &div, -1.0, 4.0);
 
         let (w, h) = self.dim();
         for i in 1..w {

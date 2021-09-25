@@ -38,7 +38,8 @@ fn main() -> anyhow::Result<()> {
 
         mac.gauss_filter(sigma2, unit);
         mac.self_advect(dt / unit);
-        mac.project2(dt, unit, 1.0);
+        // mac.project2(dt, unit, 1.0);
+        mac.project();
 
         let uv = mac.create_uv();
 

@@ -1,8 +1,8 @@
 use ndarray::{Array, Array2};
 
-use crate::{Float, Vector};
+use crate::Float;
 
-pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float, c: Float) {
+pub fn lin_solve(x: &mut Array2<Float>, x0: &Array2<Float>, a: Float, c: Float) {
     assert_eq!(x.dim(), x0.dim());
 
     let (w, h) = x.dim();
@@ -10,7 +10,7 @@ pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float, c: Floa
     for _ in 0..150 {
         for i in 0..w {
             for j in 0..h {
-                let mut t = V::zero();
+                let mut t = 0.0;
 
                 if i > 0 {
                     t = t + x[[i - 1, j]];
@@ -32,6 +32,9 @@ pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float, c: Floa
             }
         }
     }
+
+    let rev = rev(x, a, c);
+    dbg!((rev - x0).iter().map(|f| f.abs()).sum::<Float>());
 }
 
 pub fn rev(ans: &Array2<Float>, a: Float, c: Float) -> Array2<Float> {

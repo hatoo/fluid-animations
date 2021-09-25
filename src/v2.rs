@@ -92,7 +92,7 @@ impl Mac {
 
     pub fn project(&mut self) {
         let div = Array::from_shape_fn(self.dim(), |(i, j)| {
-            0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]])
+            -1.0 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]])
         });
 
         let mut p = Array::zeros(div.dim());
@@ -106,20 +106,20 @@ impl Mac {
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {
-                self.u[[i, j]] += 2.0 * (p[[i, j]] - p[[i - 1, j]]);
+                self.u[[i, j]] -= p[[i, j]] - p[[i - 1, j]];
             }
         }
 
         for i in 0..w {
             for j in 1..h {
-                self.v[[i, j]] += 2.0 * (p[[i, j]] - p[[i, j - 1]]);
+                self.v[[i, j]] -= p[[i, j]] - p[[i, j - 1]];
             }
         }
     }
 
     pub fn div(&self) -> Array2<Float> {
         let div = Array::from_shape_fn(self.dim(), |(i, j)| {
-            0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]])
+            self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]
         });
 
         div
@@ -127,7 +127,7 @@ impl Mac {
 
     pub fn project2(&mut self, dt: Float, dx: Float, density: Float) {
         let div = Array::from_shape_fn(self.dim(), |(i, j)| {
-            -0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
+            -1.0 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
         });
 
         let mut p = Array::zeros(div.dim());
@@ -141,20 +141,20 @@ impl Mac {
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {
-                self.u[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i - 1, j]]);
+                self.u[[i, j]] -= l * (p[[i, j]] - p[[i - 1, j]]);
             }
         }
 
         for i in 0..w {
             for j in 1..h {
-                self.v[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i, j - 1]]);
+                self.v[[i, j]] -= l * (p[[i, j]] - p[[i, j - 1]]);
             }
         }
     }
 
     pub fn project_variable_density(&mut self, dt: Float, dx: Float, density: &Array2<Float>) {
         let div = Array::from_shape_fn(self.dim(), |(i, j)| {
-            -0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
+            -1.0 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
         });
 
         let mut p = Array::zeros(div.dim());
@@ -168,14 +168,14 @@ impl Mac {
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {
-                self.u[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i - 1, j]])
+                self.u[[i, j]] -= l * (p[[i, j]] - p[[i - 1, j]])
                     / (0.5 * (density[[i - 1, j]] + density[[i, j]]));
             }
         }
 
         for i in 0..w {
             for j in 1..h {
-                self.v[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i, j - 1]])
+                self.v[[i, j]] -= l * (p[[i, j]] - p[[i, j - 1]])
                     / (0.5 * (density[[i, j - 1]] + density[[i, j]]));
             }
         }
@@ -189,8 +189,8 @@ impl Mac {
         divergence: &Array2<Float>,
     ) {
         let div = Array::from_shape_fn(self.dim(), |(i, j)| {
-            -0.5 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
-                + 3.0 * divergence[[i, j]]
+            -1.0 * (self.u[[i + 1, j]] - self.u[[i, j]] + self.v[[i, j + 1]] - self.v[[i, j]]) / dx
+                + divergence[[i, j]] / dx
         });
 
         let mut p = Array::zeros(div.dim());
@@ -204,14 +204,14 @@ impl Mac {
         let (w, h) = self.dim();
         for i in 1..w {
             for j in 0..h {
-                self.u[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i - 1, j]])
+                self.u[[i, j]] -= l * (p[[i, j]] - p[[i - 1, j]])
                     / (0.5 * (density[[i - 1, j]] + density[[i, j]]));
             }
         }
 
         for i in 0..w {
             for j in 1..h {
-                self.v[[i, j]] -= 2.0 * l * (p[[i, j]] - p[[i, j - 1]])
+                self.v[[i, j]] -= l * (p[[i, j]] - p[[i, j - 1]])
                     / (0.5 * (density[[i, j - 1]] + density[[i, j]]));
             }
         }
@@ -344,8 +344,8 @@ pub fn lin_solve_variable_density(
         }
     }
 
-    // let rev = linear::rev_density(x, density, a, c);
-    // dbg!((rev - x0).iter().map(|f| f.abs()).sum::<Float>());
+    let rev = linear::rev_density(x, density, a, c);
+    dbg!((rev - x0).iter().map(|f| f.abs()).sum::<Float>());
 }
 
 pub fn interpolate_linear<V: Vector>(q: &Array2<V>, ij: Vector2<Float>) -> V {

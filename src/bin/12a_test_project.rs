@@ -23,7 +23,7 @@ fn main() -> anyhow::Result<()> {
 
         let mut div = Array::zeros((N + 2, N + 2));
 
-        div[[N / 2, N / 2]] = 4000.0;
+        div[[N / 2, N / 2]] = 40.0;
 
         // mac.gauss_filter(sigma2, unit);
         mac.self_advect(dt / unit);

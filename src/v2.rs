@@ -101,6 +101,7 @@ impl Mac {
         linear::lin_solve(&mut p, &div, -1.0, 4.0);
 
         let rev = crate::linear::rev(&div, -1.0, 4.0);
+        dbg!(div.iter().fold(0.0 as Float, |a, b| a.max(b.abs())));
         dbg!((rev - &div)
             .iter()
             .fold(0.0 as Float, |a, b| a.max(b.abs())));

@@ -33,9 +33,72 @@ pub fn lin_solve(x: &mut Array2<Float>, x0: &Array2<Float>, a: Float, c: Float) 
         }
     }
 }
+fn apply_a(out: &mut Array2<Float>, ans: &Array2<Float>, a: Float, c: Float) {
+    let (w, h) = ans.dim();
 
-pub fn lin_solve_pcg(x: &mut Array2<Float>, x0: &Array2<Float>, a: Float, c: Float) {
-    todo!()
+    out.indexed_iter_mut().for_each(|((i, j), e)| {
+        *e = c * ans[[i, j]];
+
+        if i > 0 {
+            *e += a * ans[[i - 1, j]];
+        }
+
+        if i + 1 < w {
+            *e += a * ans[[i + 1, j]];
+        }
+
+        if j > 0 {
+            *e += a * ans[[i, j - 1]];
+        }
+
+        if j + 1 < h {
+            *e += a * ans[[i, j + 1]];
+        }
+    })
+}
+
+fn dot_product(a: &Array2<Float>, b: &Array2<Float>) -> Float {
+    a.indexed_iter()
+        .map(|((i, j), e)| *e * b[[i, j]])
+        .sum::<Float>()
+}
+
+pub fn lin_solve_pcg(p: &mut Array2<Float>, b: &Array2<Float>, a: Float, c: Float) {
+    assert_eq!(p.dim(), b.dim());
+
+    let mut r = b.clone();
+    let mut z = r.clone();
+    let mut s = z.clone();
+
+    let mut sigma = dot_product(&z, &r);
+
+    let (w, h) = p.dim();
+
+    for _ in 0..200 {
+        for i in 0..w {
+            for j in 0..h {
+                let mut t = 0.0;
+
+                if i > 0 {
+                    t = t + p[[i - 1, j]];
+                }
+
+                if i + 1 < w {
+                    t = t + p[[i + 1, j]];
+                }
+
+                if j > 0 {
+                    t = t + p[[i, j - 1]];
+                }
+
+                if j + 1 < h {
+                    t = t + p[[i, j + 1]];
+                }
+
+                p[[i, j]] = (b[[i, j]] - t * a) / c;
+            }
+        }
+    }
 }
 
 pub fn rev(ans: &Array2<Float>, a: Float, c: Float) -> Array2<Float> {

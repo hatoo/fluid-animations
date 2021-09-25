@@ -202,7 +202,13 @@ impl Mac {
 
         let scale = dt / (dx * dx);
 
-        lin_solve_variable_density(&mut p, &div, density, -1.0 * scale, 4.0 /* 4.1 */ * scale);
+        // lin_solve_variable_density(&mut p, &div, density, -1.0 * scale, 4.0 /* 4.1 */ * scale);
+        linear::lin_solve_pcg2(
+            &mut p,
+            &div,
+            &(-1.0 * scale / density),
+            &(4.0 * scale / density),
+        );
 
         let l = dt / (dx);
 

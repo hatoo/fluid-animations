@@ -1,4 +1,3 @@
-use cgmath::InnerSpace;
 use fluid_animations::{
     v2::{advect, gauss_filter, Mac},
     Float, Ghost,

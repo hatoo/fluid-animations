@@ -63,11 +63,65 @@ fn dot_product(a: &Array2<Float>, b: &Array2<Float>) -> Float {
         .sum::<Float>()
 }
 
-pub fn lin_solve_pcg(p: &mut Array2<Float>, b: &Array2<Float>, a: Float, c: Float) {
-    assert_eq!(p.dim(), b.dim());
+fn apply_precon(z: &mut Array2<Float>, r: &Array2<Float>, a: Float, c: Float) {
+    let tuning = 0.97;
+    let sigma = 0.25;
 
-    let mut r = b.clone();
-    let mut z = r.clone();
+    let (w, h) = z.dim();
+    let mut precon = Array::from_elem(z.dim(), 0.0 as Float);
+
+    for i in 1..w {
+        for j in 1..h {
+            let e = c
+                - (a * precon[[i - 1, j]]).powi(2)
+                - (a * precon[[i, j - 1]]).powi(2)
+                - tuning
+                    * (a * (a + a) * precon[[i - 1, j]].powi(2)
+                        + a * (a + a) * precon[[i, j - 1]].powi(2));
+
+            let e = if e < sigma * c { c } else { e };
+
+            precon[[i, j]] = 1.0 / e.sqrt();
+
+            assert!(precon[[i, j]].is_finite());
+        }
+    }
+
+    // dbg!(precon.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+    // dbg!(r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+
+    let mut q = Array::zeros(z.dim());
+
+    for i in 1..w {
+        for j in 1..h {
+            let t: Float = r[[i, j]]
+                - a * precon[[i - 1, j]] * q[[i - 1, j]]
+                - a * precon[[i, j - 1]] * q[[i, j - 1]];
+            q[[i, j]] = t * precon[[i, j]];
+
+            // dbg!(q[[i, j]]);
+            assert!(q[[i, j]].is_finite());
+        }
+    }
+    dbg!(q.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+    for i in (0..w - 1).rev() {
+        for j in (0..h - 1).rev() {
+            let t =
+                q[[i, j]] - a * precon[[i, j]] * z[[i + 1, j]] - a * precon[[i, j]] * z[[i, j + 1]];
+
+            z[[i, j]] = t * precon[[i, j]];
+            assert!(z[[i, j]].is_finite());
+        }
+    }
+    dbg!(z.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+}
+
+pub fn lin_solve_pcg(p: &mut Array2<Float>, d: &Array2<Float>, a: Float, c: Float) {
+    assert_eq!(p.dim(), d.dim());
+
+    let mut r = d.clone();
+    let mut z = Array::zeros(p.dim());
+    apply_precon(&mut z, &r, a, c);
     let mut s = z.clone();
 
     let mut sigma = dot_product(&z, &r);
@@ -89,7 +143,7 @@ pub fn lin_solve_pcg(p: &mut Array2<Float>, b: &Array2<Float>, a: Float, c: Floa
             return;
         }
 
-        z = r.clone();
+        apply_precon(&mut z, &r, a, c);
 
         let sigma_new = dot_product(&z, &r);
         let beta = sigma_new / sigma;

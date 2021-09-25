@@ -1,3 +1,4 @@
+use cgmath::InnerSpace;
 use fluid_animations::{
     v2::{advect, gauss_filter, Mac},
     Float, Ghost,
@@ -42,6 +43,9 @@ fn main() -> anyhow::Result<()> {
         mac.project();
 
         let uv = mac.create_uv();
+
+        // dbg!(uv.iter().fold(0.0 as Float, |a, &b| a.max(b.x + b.y)));
+        assert!(uv.iter().all(|v| v.x.is_finite() && v.y.is_finite()));
 
         let mut x = gauss_filter(&x0, s_sigma2, unit);
         Ghost::Both.set_border(&mut x);

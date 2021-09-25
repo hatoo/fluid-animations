@@ -191,22 +191,27 @@ fn apply_precon2(z: &mut Array2<Float>, r: &Array2<Float>, a: &Array2<Float>, c:
     let (w, h) = z.dim();
     let mut precon = Array::from_elem(z.dim(), 0.0 as Float);
 
-    z.fill(0.0);
-
-    for i in 1..w {
-        for j in 1..h {
+    for i in 0..w {
+        for j in 0..h {
             let e = c[[i, j]]
-                - (a[[i - 1, j]] * precon[[i - 1, j]]).powi(2)
-                - (a[[i, j - 1]] * precon[[i, j - 1]]).powi(2)
+                - (a.get([i - 1, j]).copied().unwrap_or_default()
+                    * precon.get([i - 1, j]).copied().unwrap_or_default())
+                .powi(2)
+                - (a.get([i, j - 1]).copied().unwrap_or_default()
+                    * precon.get([i, j - 1]).copied().unwrap_or_default())
+                .powi(2)
                 - tuning
-                    * (a[[i - 1, j]] * a[[i - 1, j]] * precon[[i - 1, j]].powi(2)
-                        + a[[i, j - 1]] * a[[i, j - 1]] * precon[[i, j - 1]].powi(2));
+                    * (a.get([i - 1, j]).copied().unwrap_or_default()
+                        * a.get([i - 1, j]).copied().unwrap_or_default()
+                        * precon.get([i - 1, j]).copied().unwrap_or_default().powi(2)
+                        + a.get([i, j - 1]).copied().unwrap_or_default()
+                            * a.get([i, j - 1]).copied().unwrap_or_default()
+                            * precon.get([i, j - 1]).copied().unwrap_or_default().powi(2));
 
             let e = if e < sigma * c[[i, j]] { c[[i, j]] } else { e };
-
             precon[[i, j]] = 1.0 / e.sqrt();
 
-            assert!(precon[[i, j]].is_finite());
+            // assert!(precon[[i, j]].is_finite());
         }
     }
 
@@ -215,26 +220,30 @@ fn apply_precon2(z: &mut Array2<Float>, r: &Array2<Float>, a: &Array2<Float>, c:
 
     let mut q = Array::zeros(z.dim());
 
-    for i in 1..w {
-        for j in 1..h {
+    for i in 0..w {
+        for j in 0..h {
             let t: Float = r[[i, j]]
-                - a[[i - 1, j]] * precon[[i - 1, j]] * q[[i - 1, j]]
-                - a[[i, j - 1]] * precon[[i, j - 1]] * q[[i, j - 1]];
+                - a.get([i - 1, j]).copied().unwrap_or_default()
+                    * precon.get([i - 1, j]).copied().unwrap_or_default()
+                    * q.get([i - 1, j]).copied().unwrap_or_default()
+                - a.get([i, j - 1]).copied().unwrap_or_default()
+                    * precon.get([i, j - 1]).copied().unwrap_or_default()
+                    * q.get([i, j - 1]).copied().unwrap_or_default();
             q[[i, j]] = t * precon[[i, j]];
 
             // dbg!(q[[i, j]]);
-            assert!(q[[i, j]].is_finite());
+            // assert!(q[[i, j]].is_finite());
         }
     }
     // dbg!(q.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
-    for i in (0..w - 1).rev() {
-        for j in (0..h - 1).rev() {
+    for i in (0..w).rev() {
+        for j in (0..h).rev() {
             let t = q[[i, j]]
-                - a[[i, j]] * precon[[i, j]] * z[[i + 1, j]]
-                - a[[i, j]] * precon[[i, j]] * z[[i, j + 1]];
+                - a[[i, j]] * precon[[i, j]] * z.get([i + 1, j]).copied().unwrap_or_default()
+                - a[[i, j]] * precon[[i, j]] * z.get([i, j + 1]).copied().unwrap_or_default();
 
             z[[i, j]] = t * precon[[i, j]];
-            assert!(z[[i, j]].is_finite());
+            // assert!(z[[i, j]].is_finite());
         }
     }
     // dbg!(z.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));

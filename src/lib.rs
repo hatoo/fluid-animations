@@ -36,6 +36,7 @@ where
 impl Vector for Float {}
 impl Vector for Vector2<Float> {}
 
+pub mod linear;
 pub mod v2;
 
 pub fn lin_solve<V: Vector>(x: &mut Array2<V>, x0: &Array2<V>, a: Float, c: Float) {

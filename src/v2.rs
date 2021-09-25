@@ -197,7 +197,7 @@ impl Mac {
 
         let scale = dt / (dx * dx);
 
-        lin_solve_variable_density(&mut p, &div, density, -1.0 * scale, 4.0 * scale);
+        lin_solve_variable_density(&mut p, &div, density, -1.0 * scale, 4.05 * scale);
 
         let l = dt / (dx);
 

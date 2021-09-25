@@ -157,6 +157,133 @@ pub fn lin_solve_pcg(p: &mut Array2<Float>, d: &Array2<Float>, a: Float, c: Floa
     }
 }
 
+//
+
+fn apply_a2(out: &mut Array2<Float>, ans: &Array2<Float>, a: &Array2<Float>, c: &Array2<Float>) {
+    let (w, h) = ans.dim();
+
+    out.indexed_iter_mut().for_each(|((i, j), e)| {
+        *e = c[[i, j]] * ans[[i, j]];
+
+        if i > 0 {
+            *e += a[[i - 1, j]] * ans[[i - 1, j]];
+        }
+
+        if i + 1 < w {
+            *e += a[[i + 1, j]] * ans[[i + 1, j]];
+        }
+
+        if j > 0 {
+            *e += a[[i, j - 1]] * ans[[i, j - 1]];
+        }
+
+        if j + 1 < h {
+            *e += a[[i, j + 1]] * ans[[i, j + 1]];
+        }
+    })
+}
+
+fn apply_precon2(z: &mut Array2<Float>, r: &Array2<Float>, a: &Array2<Float>, c: &Array2<Float>) {
+    let tuning = 0.97;
+    let sigma = 0.25;
+
+    let (w, h) = z.dim();
+    let mut precon = Array::from_elem(z.dim(), 0.0 as Float);
+
+    z.fill(0.0);
+
+    for i in 1..w {
+        for j in 1..h {
+            let e = c[[i, j]]
+                - (a[[i - 1, j]] * precon[[i - 1, j]]).powi(2)
+                - (a[[i, j - 1]] * precon[[i, j - 1]]).powi(2)
+                - tuning
+                    * (a[[i - 1, j]] * a[[i - 1, j]] * precon[[i - 1, j]].powi(2)
+                        + a[[i, j - 1]] * a[[i, j - 1]] * precon[[i, j - 1]].powi(2));
+
+            let e = if e < sigma * c[[i, j]] { c[[i, j]] } else { e };
+
+            precon[[i, j]] = 1.0 / e.sqrt();
+
+            assert!(precon[[i, j]].is_finite());
+        }
+    }
+
+    // dbg!(precon.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+    // dbg!(r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+
+    let mut q = Array::zeros(z.dim());
+
+    for i in 1..w {
+        for j in 1..h {
+            let t: Float = r[[i, j]]
+                - a[[i - 1, j]] * precon[[i - 1, j]] * q[[i - 1, j]]
+                - a[[i, j - 1]] * precon[[i, j - 1]] * q[[i, j - 1]];
+            q[[i, j]] = t * precon[[i, j]];
+
+            // dbg!(q[[i, j]]);
+            assert!(q[[i, j]].is_finite());
+        }
+    }
+    // dbg!(q.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+    for i in (0..w - 1).rev() {
+        for j in (0..h - 1).rev() {
+            let t = q[[i, j]]
+                - a[[i, j]] * precon[[i, j]] * z[[i + 1, j]]
+                - a[[i, j]] * precon[[i, j]] * z[[i, j + 1]];
+
+            z[[i, j]] = t * precon[[i, j]];
+            assert!(z[[i, j]].is_finite());
+        }
+    }
+    // dbg!(z.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+}
+
+pub fn lin_solve_pcg2(
+    p: &mut Array2<Float>,
+    d: &Array2<Float>,
+    a: &Array2<Float>,
+    c: &Array2<Float>,
+) {
+    assert_eq!(p.dim(), d.dim());
+
+    let mut r = d.clone();
+    let mut z = Array::zeros(p.dim());
+    apply_precon2(&mut z, &r, a, c);
+    let mut s = z.clone();
+
+    let mut sigma = dot_product(&z, &r);
+
+    for _ in 0..200 {
+        apply_a2(&mut z, &s, a, c);
+        let alpha = sigma / dot_product(&z, &s);
+
+        Zip::from(&mut *p).and(&s).for_each(|a, &b| {
+            *a += alpha * b;
+        });
+
+        Zip::from(&mut r).and(&z).for_each(|a, &b| {
+            *a -= alpha * b;
+        });
+
+        if r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())) < 1e-3 {
+            dbg!("early return");
+            return;
+        }
+
+        apply_precon2(&mut z, &r, a, c);
+
+        let sigma_new = dot_product(&z, &r);
+        let beta = sigma_new / sigma;
+
+        Zip::from(&mut s).and(&z).for_each(|a, &b| {
+            *a = b + beta * *a;
+        });
+
+        sigma = sigma_new;
+    }
+}
+
 pub fn rev(ans: &Array2<Float>, a: Float, c: Float) -> Array2<Float> {
     let (w, h) = ans.dim();
     Array::from_shape_fn(ans.dim(), |(i, j)| {

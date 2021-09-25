@@ -4,7 +4,6 @@ use fluid_animations::{
     Float, Ghost,
 };
 use ndarray::{prelude::*, Zip};
-use num_traits::clamp;
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;

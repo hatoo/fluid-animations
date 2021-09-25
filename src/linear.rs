@@ -160,7 +160,7 @@ mod test {
     }
 
     #[test]
-    fn lin_sovle_vs_linalg() {
+    fn lin_sovle() {
         let b = array![[0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0],];
         let mut t = Array::zeros(b.dim());
 

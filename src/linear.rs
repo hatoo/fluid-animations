@@ -78,8 +78,7 @@ fn apply_precon(z: &mut Array2<Float>, r: &Array2<Float>, a: Float, c: Float) {
                 - (a * precon[[i - 1, j]]).powi(2)
                 - (a * precon[[i, j - 1]]).powi(2)
                 - tuning
-                    * (a * (a + a) * precon[[i - 1, j]].powi(2)
-                        + a * (a + a) * precon[[i, j - 1]].powi(2));
+                    * (a * a * precon[[i - 1, j]].powi(2) + a * a * precon[[i, j - 1]].powi(2));
 
             let e = if e < sigma * c { c } else { e };
 

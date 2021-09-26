@@ -205,19 +205,28 @@ fn pre_compute(a: &Array2<Float>, c: &Array2<Float>) -> Array2<Float> {
     for i in 0..w {
         for j in 0..h {
             let e = c[[i, j]]
-                - (a.get([i - 1, j]).copied().unwrap_or_default()
-                    * precon.get([i - 1, j]).copied().unwrap_or_default())
+                - if i > 0 {
+                    a[[i - 1, j]] * precon[[i - 1, j]]
+                } else {
+                    0.0
+                }
                 .powi(2)
-                - (a.get([i, j - 1]).copied().unwrap_or_default()
-                    * precon.get([i, j - 1]).copied().unwrap_or_default())
+                - if j > 0 {
+                    a[[i, j - 1]] * precon[[i, j - 1]]
+                } else {
+                    0.0
+                }
                 .powi(2)
                 - tuning
-                    * (a.get([i - 1, j]).copied().unwrap_or_default()
-                        * a.get([i - 1, j]).copied().unwrap_or_default()
-                        * precon.get([i - 1, j]).copied().unwrap_or_default().powi(2)
-                        + a.get([i, j - 1]).copied().unwrap_or_default()
-                            * a.get([i, j - 1]).copied().unwrap_or_default()
-                            * precon.get([i, j - 1]).copied().unwrap_or_default().powi(2));
+                    * (if i > 0 {
+                        a[[i - 1, j]] * a[[i - 1, j]] * precon[[i - 1, j]].powi(2)
+                    } else {
+                        0.0
+                    } + if j > 0 {
+                        a[[i, j - 1]] * a[[i, j - 1]] * precon[[i, j - 1]].powi(2)
+                    } else {
+                        0.0
+                    });
 
             let e = if e < sigma * c[[i, j]] { c[[i, j]] } else { e };
             precon[[i, j]] = 1.0 / e.sqrt();

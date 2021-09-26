@@ -212,6 +212,8 @@ impl Mac {
         linear::apply_a2(&mut rev, &p, &a, &c);
         assert!(p.iter().all(|p| p.is_finite()));
 
+        dbg!(&div.iter().fold(0.0 as Float, |a, b| a.max(b.abs())));
+
         dbg!((rev - &div)
             .iter()
             .fold(0.0 as Float, |a, b| a.max(b.abs())));

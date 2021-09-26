@@ -121,6 +121,10 @@ fn apply_precon(z: &mut Array2<Float>, r: &Array2<Float>, a: Float, c: Float) {
 pub fn lin_solve_pcg(p: &mut Array2<Float>, d: &Array2<Float>, a: Float, c: Float) {
     assert_eq!(p.dim(), d.dim());
 
+    if d.iter().fold(0.0 as Float, |a, &b| a.max(b)) < 1e-6 {
+        return;
+    }
+
     let tol = 1e-6 * d.iter().fold(0.0 as Float, |a, &b| a.max(b));
 
     let mut r = d.clone();

@@ -246,6 +246,32 @@ fn apply_precon2(z: &mut Array2<Float>, r: &Array2<Float>, a: &Array2<Float>, c:
             // assert!(q[[i, j]].is_finite());
         }
     }
+
+    /*
+    let mut f = get_matrix2(a, c);
+
+    for ((i, j), x) in f.indexed_iter_mut() {
+        if j >= i {
+            *x = 0.0;
+        }
+    }
+
+    let e_inv = Array::from_diag(&precon.clone().into_shape(a.len()).unwrap());
+    let e = Array::from_diag(&precon.map(|&e| 1.0 / e).into_shape(a.len()).unwrap());
+
+    let l = f.dot(&e_inv) + &e;
+
+    let llt = l.dot(&l.t());
+    let aa = get_matrix2(a, c);
+
+    dbg!(&aa);
+    dbg!(aa - &llt);
+
+    let lq = l.dot(&q.clone().into_shape(q.len()).unwrap());
+    */
+
+    // dbg!(&lq - &r.clone().into_shape(r.len()).unwrap());
+
     // dbg!(q.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
     for i in (0..w).rev() {
         for j in (0..h).rev() {
@@ -257,7 +283,9 @@ fn apply_precon2(z: &mut Array2<Float>, r: &Array2<Float>, a: &Array2<Float>, c:
             // assert!(z[[i, j]].is_finite());
         }
     }
-    // dbg!(z.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+
+    // let ltz = l.t().dot(&z.clone().into_shape(z.len()).unwrap());
+    // dbg!(&ltz - &q.clone().into_shape(q.len()).unwrap());
 }
 
 pub fn lin_solve_pcg2(
@@ -292,6 +320,8 @@ pub fn lin_solve_pcg2(
         Zip::from(&mut r).and(&z).for_each(|a, &b| {
             *a -= alpha * b;
         });
+
+        // dbg!(r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
 
         if r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())) < tol {
             dbg!("early return");
@@ -363,6 +393,35 @@ pub fn rev_density(
         t
     })
 }
+fn get_matrix2(a: &Array2<Float>, c: &Array2<Float>) -> Array2<Float> {
+    let mut m = Array::zeros((a.len(), a.len()));
+
+    let (w, h) = a.dim();
+
+    for i in 0..w {
+        for j in 0..h {
+            let r = i * h + j;
+            m[[r, i * h + j]] = c[[i, j]];
+
+            if i > 0 {
+                m[[r, (i - 1) * h + j]] = a[[i - 1, j]];
+            }
+
+            if i + 1 < w {
+                m[[r, (i + 1) * h + j]] = a[[i + 1, j]];
+            }
+
+            if j > 0 {
+                m[[r, i * h + (j - 1)]] = a[[i, j - 1]];
+            }
+
+            if j + 1 < h {
+                m[[r, i * h + (j + 1)]] = a[[i, j + 1]];
+            }
+        }
+    }
+    m
+}
 
 #[cfg(test)]
 mod test {
@@ -370,7 +429,7 @@ mod test {
     use ndarray_linalg::{assert_close_l1, solve::Solve};
 
     use crate::{
-        linear::{lin_solve, lin_solve_pcg},
+        linear::{apply_a2, lin_solve, lin_solve_pcg, lin_solve_pcg2},
         Float,
     };
 
@@ -458,5 +517,24 @@ mod test {
         // let ans = lin_solve_by_linalg(&b, -1.0, 4.0);
 
         assert_close_l1!(&rev(&t, -1.0, 4.0), &b, 1e-5);
+    }
+
+    #[test]
+    fn lin_sovle_pcg2() {
+        let d = array![[0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0],];
+        let density = array![[1.0, 1.0, 1.0], [1.0, 0.8, 1.0], [1.0, 1.0, 1.0],];
+        let mut t = Array::zeros(d.dim());
+
+        let a = -1.0 / &density;
+        let c = 4.0 / &density;
+
+        lin_solve_pcg2(&mut t, &d, &a, &c);
+        let mut rev = Array::zeros(d.dim());
+        apply_a2(&mut rev, &t, &a, &c);
+
+        assert_close_l1!(&rev, &d, 1e-5);
+
+        // dbg!(d);
+        // dbg!(rev);
     }
 }

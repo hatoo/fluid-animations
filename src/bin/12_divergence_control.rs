@@ -50,7 +50,7 @@ fn main() -> anyhow::Result<()> {
         let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| {
             let delta = density[[i, j]] - prev_density[[i, j]];
 
-            -1.0 / dt * delta / density[[i, j]]
+            -1.0 / dt * delta / density[[i, j]] * unit
         });
 
         /*

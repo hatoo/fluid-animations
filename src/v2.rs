@@ -210,6 +210,7 @@ impl Mac {
         // lin_solve_variable_density(&mut p, &div, density, -1.0 * scale, 4.0 /* 4.1 */ * scale);
         linear::lin_solve_pcg2(&mut p, &div, &a, &c);
         linear::apply_a2(&mut rev, &p, &a, &c);
+        assert!(p.iter().all(|p| p.is_finite()));
 
         dbg!((rev - &div)
             .iter()

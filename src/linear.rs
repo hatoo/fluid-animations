@@ -268,6 +268,10 @@ pub fn lin_solve_pcg2(
 ) {
     assert_eq!(p.dim(), d.dim());
 
+    if d.iter().fold(0.0 as Float, |a, &b| a.max(b)) < 1e-6 {
+        return;
+    }
+
     let tol = 1e-6 * d.iter().fold(0.0 as Float, |a, &b| a.max(b));
 
     let mut r = d.clone();

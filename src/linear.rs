@@ -166,7 +166,12 @@ pub fn lin_solve_pcg(p: &mut Array2<Float>, d: &Array2<Float>, a: Float, c: Floa
 
 //
 
-fn apply_a2(out: &mut Array2<Float>, ans: &Array2<Float>, a: &Array2<Float>, c: &Array2<Float>) {
+pub fn apply_a2(
+    out: &mut Array2<Float>,
+    ans: &Array2<Float>,
+    a: &Array2<Float>,
+    c: &Array2<Float>,
+) {
     let (w, h) = ans.dim();
 
     out.indexed_iter_mut().for_each(|((i, j), e)| {

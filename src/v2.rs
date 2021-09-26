@@ -202,13 +202,18 @@ impl Mac {
 
         let scale = dt / (dx * dx);
 
+        let a = -1.0 * scale / density;
+        let c = 4.0 * scale / density;
+
+        let mut rev = Array::zeros(div.dim());
+
         // lin_solve_variable_density(&mut p, &div, density, -1.0 * scale, 4.0 /* 4.1 */ * scale);
-        linear::lin_solve_pcg2(
-            &mut p,
-            &div,
-            &(-1.0 * scale / density),
-            &(4.0 * scale / density),
-        );
+        linear::lin_solve_pcg2(&mut p, &div, &a, &c);
+        linear::apply_a2(&mut rev, &p, &a, &c);
+
+        dbg!((rev - &div)
+            .iter()
+            .fold(0.0 as Float, |a, b| a.max(b.abs())));
 
         let l = dt / (dx);
 

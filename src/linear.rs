@@ -224,6 +224,21 @@ fn pre_compute(a: &Array2<Float>, c: &Array2<Float>) -> Array2<Float> {
         }
     }
 
+    let mut f = get_matrix2(a, c);
+
+    for ((i, j), x) in f.indexed_iter_mut() {
+        if j >= i {
+            *x = 0.0;
+        }
+    }
+
+    let e_inv = Array::from_diag(&precon.clone().into_shape(a.len()).unwrap());
+    let e = Array::from_diag(&precon.map(|&e| 1.0 / e).into_shape(a.len()).unwrap());
+
+    let l = f.dot(&e_inv) + &e;
+
+    dbg!(l);
+
     precon
 }
 
@@ -357,7 +372,7 @@ pub fn lin_solve_pcg2(
             *a -= alpha * b;
         });
 
-        dbg!(r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+        // dbg!(r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
 
         if r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())) < tol {
             dbg!("early return");

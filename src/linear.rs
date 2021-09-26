@@ -195,12 +195,12 @@ pub fn apply_a2(
     })
 }
 
-fn apply_precon2(z: &mut Array2<Float>, r: &Array2<Float>, a: &Array2<Float>, c: &Array2<Float>) {
+fn pre_compute(a: &Array2<Float>, c: &Array2<Float>) -> Array2<Float> {
     let tuning = 0.97;
     let sigma = 0.25;
 
-    let (w, h) = z.dim();
-    let mut precon = Array::from_elem(z.dim(), 0.0 as Float);
+    let (w, h) = a.dim();
+    let mut precon = Array::from_elem(a.dim(), 0.0 as Float);
 
     for i in 0..w {
         for j in 0..h {
@@ -221,13 +221,48 @@ fn apply_precon2(z: &mut Array2<Float>, r: &Array2<Float>, a: &Array2<Float>, c:
 
             let e = if e < sigma * c[[i, j]] { c[[i, j]] } else { e };
             precon[[i, j]] = 1.0 / e.sqrt();
-
-            // assert!(precon[[i, j]].is_finite());
         }
     }
 
+    precon
+}
+
+fn apply_precon2(
+    z: &mut Array2<Float>,
+    r: &Array2<Float>,
+    a: &Array2<Float>,
+    precon: &Array2<Float>,
+) {
+    /*
+    let mut f = get_matrix2(a, c);
+
+    for ((i, j), x) in f.indexed_iter_mut() {
+        if j >= i {
+            *x = 0.0;
+        }
+    }
+
+    // dbg!(&f);
+
+    let e_inv = Array::from_diag(&precon.clone().into_shape(a.len()).unwrap());
+    let e = Array::from_diag(&precon.map(|&e| 1.0 / e).into_shape(a.len()).unwrap());
+
+    let l = f.dot(&e_inv) + &e;
+
+    dbg!(&l);
+
+    // dbg!(&l, get_matrix2(a, c));
+
+    let llt = l.dot(&l.t());
+    let aa = get_matrix2(a, c);
+    */
+
+    // dbg!(&aa);
+    // dbg!(aa - &llt);
     // dbg!(precon.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
     // dbg!(r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+
+    let (w, h) = z.dim();
 
     let mut q = Array::zeros(z.dim());
 
@@ -266,9 +301,9 @@ fn apply_precon2(z: &mut Array2<Float>, r: &Array2<Float>, a: &Array2<Float>, c:
 
     dbg!(&aa);
     dbg!(aa - &llt);
-
-    let lq = l.dot(&q.clone().into_shape(q.len()).unwrap());
     */
+
+    // let lq = l.dot(&q.clone().into_shape(q.len()).unwrap());
 
     // dbg!(&lq - &r.clone().into_shape(r.len()).unwrap());
 
@@ -302,9 +337,10 @@ pub fn lin_solve_pcg2(
 
     let tol = 1e-6 * d.iter().fold(0.0 as Float, |a, &b| a.max(b));
 
+    let precon = pre_compute(a, c);
     let mut r = d.clone();
     let mut z = Array::zeros(p.dim());
-    apply_precon2(&mut z, &r, a, c);
+    apply_precon2(&mut z, &r, a, &precon);
     let mut s = z.clone();
 
     let mut sigma = dot_product(&z, &r);
@@ -321,14 +357,14 @@ pub fn lin_solve_pcg2(
             *a -= alpha * b;
         });
 
-        // dbg!(r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
+        dbg!(r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())));
 
         if r.iter().fold(0.0 as Float, |a, &b| a.max(b.abs())) < tol {
             dbg!("early return");
             return;
         }
 
-        apply_precon2(&mut z, &r, a, c);
+        apply_precon2(&mut z, &r, a, &precon);
 
         let sigma_new = dot_product(&z, &r);
         let beta = sigma_new / sigma;
@@ -426,10 +462,10 @@ fn get_matrix2(a: &Array2<Float>, c: &Array2<Float>) -> Array2<Float> {
 #[cfg(test)]
 mod test {
     use ndarray::{array, Array, Array2};
-    use ndarray_linalg::{assert_close_l1, solve::Solve};
+    use ndarray_linalg::{assert_close_l1, solve::Solve, Cholesky, UPLO};
 
     use crate::{
-        linear::{apply_a2, lin_solve, lin_solve_pcg, lin_solve_pcg2},
+        linear::{apply_a2, get_matrix2, lin_solve, lin_solve_pcg, lin_solve_pcg2},
         Float,
     };
 
@@ -522,7 +558,7 @@ mod test {
     #[test]
     fn lin_sovle_pcg2() {
         let d = array![[0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0],];
-        let density = array![[1.0, 1.0, 1.0], [1.0, 0.8, 1.0], [1.0, 1.0, 1.0],];
+        let density = array![[1.0, 1.0, 1.0], [1.0, 0.5, 1.0], [1.0, 1.0, 1.0],];
         let mut t = Array::zeros(d.dim());
 
         let a = -1.0 / &density;
@@ -532,9 +568,30 @@ mod test {
         let mut rev = Array::zeros(d.dim());
         apply_a2(&mut rev, &t, &a, &c);
 
-        assert_close_l1!(&rev, &d, 1e-5);
+        // assert_close_l1!(&rev, &d, 1e-5);
+        let err = (&rev - &d)
+            .iter()
+            .fold(0.0 as Float, |a, &b| a.max(b.abs()));
 
+        dbg!(err);
+
+        let aa = get_matrix2(&a, &c);
+
+        let cho = aa.cholesky(UPLO::Lower).unwrap();
+
+        dbg!(cho);
+
+        assert!(err < 1e-5);
+        /*
+        let m = get_matrix2(&a, &c);
+
+        let ans = m.solve(&d.clone().into_shape(d.len()).unwrap()).unwrap();
+
+        apply_a2(&mut rev, &ans.into_shape(d.dim()).unwrap(), &a, &c);
+
+        dbg!(&rev - &d);
         // dbg!(d);
         // dbg!(rev);
+        */
     }
 }

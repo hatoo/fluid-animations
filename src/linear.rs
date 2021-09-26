@@ -224,6 +224,7 @@ fn pre_compute(a: &Array2<Float>, c: &Array2<Float>) -> Array2<Float> {
         }
     }
 
+    /*
     let mut f = get_matrix2(a, c);
 
     for ((i, j), x) in f.indexed_iter_mut() {
@@ -238,6 +239,7 @@ fn pre_compute(a: &Array2<Float>, c: &Array2<Float>) -> Array2<Float> {
     let l = f.dot(&e_inv) + &e;
 
     dbg!(l);
+    */
 
     precon
 }

@@ -54,7 +54,12 @@ fn main() -> anyhow::Result<()> {
         uv_mac.self_advect(dt / unit);
         uv_mac.gauss_filter(uv_sigma2, unit);
         uv_mac.buoyancy2(&density, density_amb, g * dt);
-        uv_mac.project_variable_density(dt, unit, &density);
+        uv_mac.project_variable_density_div_control(
+            dt,
+            unit,
+            &density,
+            &Array::zeros(density.dim()),
+        );
 
         let uv = uv_mac.create_uv();
 

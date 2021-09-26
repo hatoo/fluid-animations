@@ -59,13 +59,11 @@ fn main() -> anyhow::Result<()> {
         dbg!(s[[N / 2, N / 2]]);
         */
 
-        let d1 = Array::from_elem(div.dim(), 1.0);
-
         uv_mac.self_advect(dt / unit);
         uv_mac.gauss_filter(uv_sigma2, unit);
         uv_mac.buoyancy2(&density, density_amb, g * dt);
         // uv_mac.project_variable_density(dt, unit, &density);
-        uv_mac.project_variable_density_div_control(dt, unit, &d1, &div);
+        uv_mac.project_variable_density_div_control(dt, unit, &density, &div);
 
         prev_density = density;
 

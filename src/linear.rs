@@ -467,6 +467,8 @@ pub fn rev_density(
         t
     })
 }
+
+#[allow(dead_code)]
 fn get_matrix2(a: &Array2<Float>, c: &Array2<Float>) -> Array2<Float> {
     let mut m = Array::zeros((a.len(), a.len()));
 

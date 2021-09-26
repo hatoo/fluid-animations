@@ -295,12 +295,16 @@ fn apply_precon2(
     for i in 0..w {
         for j in 0..h {
             let t: Float = r[[i, j]]
-                - a.get([i - 1, j]).copied().unwrap_or_default()
-                    * precon.get([i - 1, j]).copied().unwrap_or_default()
-                    * q.get([i - 1, j]).copied().unwrap_or_default()
-                - a.get([i, j - 1]).copied().unwrap_or_default()
-                    * precon.get([i, j - 1]).copied().unwrap_or_default()
-                    * q.get([i, j - 1]).copied().unwrap_or_default();
+                - if i > 0 {
+                    a[[i - 1, j]] * precon[[i - 1, j]] * q[[i - 1, j]]
+                } else {
+                    0.0
+                }
+                - if j > 0 {
+                    a[[i, j - 1]] * precon[[i, j - 1]] * q[[i, j - 1]]
+                } else {
+                    0.0
+                };
             q[[i, j]] = t * precon[[i, j]];
 
             // dbg!(q[[i, j]]);
@@ -337,8 +341,16 @@ fn apply_precon2(
     for i in (0..w).rev() {
         for j in (0..h).rev() {
             let t = q[[i, j]]
-                - a[[i, j]] * precon[[i, j]] * z.get([i + 1, j]).copied().unwrap_or_default()
-                - a[[i, j]] * precon[[i, j]] * z.get([i, j + 1]).copied().unwrap_or_default();
+                - if i + 1 < w {
+                    a[[i, j]] * precon[[i, j]] * z[[i + 1, j]]
+                } else {
+                    0.0
+                }
+                - if j + 1 < h {
+                    a[[i, j]] * precon[[i, j]] * z[[i, j + 1]]
+                } else {
+                    0.0
+                };
 
             z[[i, j]] = t * precon[[i, j]];
             // assert!(z[[i, j]].is_finite());

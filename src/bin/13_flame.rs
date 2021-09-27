@@ -88,7 +88,7 @@ fn main() -> anyhow::Result<()> {
         // let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] / dt / 3.0);
         let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| {
             // -1.0 / dt * (density[[i, j]] - prev_density[[i, j]]) / density[[i, j]]
-            d_fuel[[i, j]] * unit * 10.0
+            d_fuel[[i, j]] * unit
         });
 
         /*
@@ -99,7 +99,7 @@ fn main() -> anyhow::Result<()> {
         // dbg!(div[[N / 2, N / 2]]);
 
         uv_mac.self_advect(dt / unit);
-        uv_mac.buoyancy2(&density, density_amb, g * dt * 0.5);
+        uv_mac.buoyancy2(&density, density_amb, g * dt);
         uv_mac.gauss_filter(uv_sigma2, unit);
         // uv_mac.project();
         uv_mac.project_variable_density_div_control(dt, unit, &d0, density_amb, &div);
@@ -133,7 +133,9 @@ fn main() -> anyhow::Result<()> {
 
         dbg!(fuel.iter().fold(0.0 as Float, |a, &b| a.max(b)));
 
-        fuel[[N / 2, N / 2]] += dt * 1000.0;
+        for i in N / 2 - 16..=N / 2 + 16 {
+            fuel[[i, N / 2]] += dt * 500.0;
+        }
 
         // uv[[N / 2, N / 2]] = vec2(0.0, -8.0);
 

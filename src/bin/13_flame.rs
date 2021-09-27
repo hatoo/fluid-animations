@@ -7,7 +7,7 @@ use ndarray::{prelude::*, Zip};
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
-    const N_FRAME: usize = 128;
+    const N_FRAME: usize = 64;
 
     let t_amb: Float = 273.0;
 
@@ -94,7 +94,7 @@ fn main() -> anyhow::Result<()> {
         for i in N / 2 - 16..=N / 2 + 16 {
             // div[[i, N / 2]] += 2.0;
         }
-        div[[N / 2, N / 2]] += 16.0;
+        // div[[N / 2, N / 2]] += 16.0;
 
         /*
         dbg!(density[[N / 2, N / 2]]);
@@ -158,17 +158,20 @@ fn main() -> anyhow::Result<()> {
         let mut s1 = Array::zeros(fuel.dim());
         advect(&mut s1, &fuel, &uv, dt / unit);
         Ghost::Both.set_border(&mut s1);
-        let mut s2 = gauss_filter(&s1, fuel_sigma2, unit);
-        Ghost::Both.set_border(&mut s2);
-        std::mem::swap(&mut fuel, &mut s2);
+        std::mem::swap(&mut fuel, &mut s1);
+
+        let mut s1 = gauss_filter(&fuel, fuel_sigma2, unit);
+        Ghost::Both.set_border(&mut s1);
+        std::mem::swap(&mut fuel, &mut s1);
 
         let mut t1 = Array::zeros(t.dim());
         advect(&mut t1, &t, &uv, dt / unit);
-        dbg!(t1.iter().fold(0.0 as Float, |a, &b| a.max(b)));
         Ghost::Both.set_border(&mut t1);
-        let mut t2 = gauss_filter_amb(&t1, t_sigma2, unit, t_amb);
-        Ghost::Both.set_border(&mut t2);
-        std::mem::swap(&mut t, &mut t2);
+        std::mem::swap(&mut t, &mut t1);
+
+        let mut t1 = gauss_filter_amb(&t, t_sigma2, unit, t_amb);
+        Ghost::Both.set_border(&mut t1);
+        std::mem::swap(&mut t, &mut t1);
 
         dbg!(t[[N / 2, N / 2]]);
 

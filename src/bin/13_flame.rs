@@ -7,9 +7,9 @@ use ndarray::{prelude::*, Zip};
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
-    const N_FRAME: usize = 64;
+    const N_FRAME: usize = 128;
 
-    let t_amb = 273.0;
+    let t_amb: Float = 273.0;
 
     let mut fuel = Array::from_elem((N + 2, N + 2), 0.0);
     let mut t = Array::from_elem((N + 2, N + 2), t_amb);
@@ -18,29 +18,29 @@ fn main() -> anyhow::Result<()> {
 
     let dt: Float = 1.0 / 24.0;
     let unit = 1.0 / N as Float;
-    let k_t = 0.002;
-    let k_fuel = 0.05;
+    let k_t = 0.0001;
+    let k_fuel = 0.0001;
 
     let t_sigma2 = 0.5 * k_t * dt;
     let fuel_sigma2 = 0.5 * k_fuel * dt;
     let uv_sigma2 = 0.5 * 0.1 * dt;
 
-    let alpha = 0.1;
+    let alpha = 0.01;
 
     let g = 9.8;
 
     let density_amb = 1.01e5 / (285.0 * t_amb);
 
     let z = 7.5;
-    let t_ignite = 0.0; //t_amb + 30.0;
-    let t_max = 2000.0;
+    let t_ignite = t_amb;
+    let t_max = 1300.0;
 
-    let c = 0.1;
+    let c = 1.0;
 
-    t[[N / 2, N / 2]] = 10000.0;
-    fuel[[N / 2, N / 2]] = 100.0;
+    t[[N / 2, N / 2]] = 500.0;
+    fuel[[N / 2, N / 2]] = 1.0;
 
-    let mut prev_density = Array::from_elem(fuel.dim(), density_amb);
+    // let mut prev_density = Array::from_elem(fuel.dim(), density_amb);
     let d0 = Array::from_elem(fuel.dim(), density_amb);
 
     for f in 1..N_FRAME + 1 {
@@ -52,9 +52,12 @@ fn main() -> anyhow::Result<()> {
 
         let mut cnt = 0;
         let d_fuel = Array::from_shape_fn(fuel.dim(), |(i, j)| {
-            if t[[i, j]] > t_ignite {
+            if t[[i, j]] > t_ignite || (i == N / 2 && j == N / 2) {
                 if fuel[[i, j]] > 0.0 {
                     cnt += 1;
+                    if i == N / 2 && j == N / 2 {
+                        dbg!((z * dt).min(fuel[[i, j]]));
+                    }
                 }
 
                 (z * dt).min(fuel[[i, j]])
@@ -84,7 +87,8 @@ fn main() -> anyhow::Result<()> {
 
         // let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] / dt / 3.0);
         let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| {
-            -1.0 / dt * (density[[i, j]] - prev_density[[i, j]]) / density[[i, j]]
+            // -1.0 / dt * (density[[i, j]] - prev_density[[i, j]]) / density[[i, j]]
+            d_fuel[[i, j]] * unit * 10.0
         });
 
         /*
@@ -95,7 +99,7 @@ fn main() -> anyhow::Result<()> {
         // dbg!(div[[N / 2, N / 2]]);
 
         uv_mac.self_advect(dt / unit);
-        uv_mac.buoyancy2(&density, density_amb, g * dt);
+        uv_mac.buoyancy2(&density, density_amb, g * dt * 0.5);
         uv_mac.gauss_filter(uv_sigma2, unit);
         // uv_mac.project();
         uv_mac.project_variable_density_div_control(dt, unit, &d0, density_amb, &div);
@@ -110,7 +114,7 @@ fn main() -> anyhow::Result<()> {
             .fold(0.0 as Float, |a, &b| { a.max(b.abs()) }));
             */
 
-        let mut uv = uv_mac.create_uv();
+        let uv = uv_mac.create_uv();
 
         /*
         uv = uv.map(|v| {
@@ -118,6 +122,8 @@ fn main() -> anyhow::Result<()> {
             v * m / v.magnitude()
         });
         */
+
+        // uv[[N / 2, N / 2]] += vec2(-1.0, 0.0);
 
         dbg!(uv.iter().fold(0.0 as Float, |a, &b| a.max(b.magnitude())));
 
@@ -127,7 +133,7 @@ fn main() -> anyhow::Result<()> {
 
         dbg!(fuel.iter().fold(0.0 as Float, |a, &b| a.max(b)));
 
-        fuel[[N / 2, N / 2]] += dt * N as Float * N as Float * 0.25;
+        fuel[[N / 2, N / 2]] += dt * 1000.0;
 
         // uv[[N / 2, N / 2]] = vec2(0.0, -8.0);
 
@@ -137,8 +143,10 @@ fn main() -> anyhow::Result<()> {
             .and(&d_fuel)
             .and(&density)
             .for_each(|a, &b, &c| {
-                *a += 100.0 / (z * dt) * b / c;
+                *a += b / (z * dt) * 50.0;
             });
+
+        dbg!(t.iter().fold(0.0 as Float, |a, &b| a.max(b)));
 
         let mut s1 = Array::zeros(fuel.dim());
         advect(&mut s1, &fuel, &uv, dt / unit);
@@ -149,6 +157,7 @@ fn main() -> anyhow::Result<()> {
 
         let mut t1 = Array::zeros(t.dim());
         advect(&mut t1, &t, &uv, dt / unit);
+        dbg!(t1.iter().fold(0.0 as Float, |a, &b| a.max(b)));
         Ghost::Both.set_border(&mut t1);
         let mut t2 = gauss_filter_amb(&t1, t_sigma2, unit, t_amb);
         Ghost::Both.set_border(&mut t2);
@@ -164,7 +173,7 @@ fn main() -> anyhow::Result<()> {
 
         // dbg!(t[[N / 2, N / 2]]);
 
-        prev_density = density;
+        // prev_density = density;
 
         dbg!(t.iter().fold(0.0 as Float, |a, &b| a.max(b)));
 

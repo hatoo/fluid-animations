@@ -4,10 +4,12 @@ use fluid_animations::{
     Float, Ghost,
 };
 use ndarray::{prelude::*, Zip};
+use noise::{NoiseFn, Perlin};
+use rand::prelude::*;
 
 fn main() -> anyhow::Result<()> {
     const N: usize = 400;
-    const N_FRAME: usize = 64;
+    const N_FRAME: usize = 128;
 
     let t_amb: Float = 273.0;
 
@@ -42,6 +44,9 @@ fn main() -> anyhow::Result<()> {
 
     let mut prev_density = Array::from_elem(fuel.dim(), density_amb);
     let d0 = Array::from_elem(fuel.dim(), density_amb);
+
+    let mut rng = StdRng::seed_from_u64(114514);
+    let perlin = Perlin::new();
 
     for f in 1..N_FRAME + 1 {
         // fluid_animations::image::save(f, &fuel)?;
@@ -88,6 +93,12 @@ fn main() -> anyhow::Result<()> {
         // let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] / dt / 3.0);
         let mut div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| {
             -1.0 / dt * (density[[i, j]] - prev_density[[i, j]]) / density[[i, j]] * unit * 0.1
+                + perlin.get([
+                    i as Float * unit * 64.0,
+                    j as Float * unit * 64.0,
+                    f as Float * dt * 16.0,
+                ]) * 0.1
+            // rng.gen_range(-0.1..0.1)
             // d_fuel[[i, j]] * unit
         });
 
@@ -138,7 +149,7 @@ fn main() -> anyhow::Result<()> {
 
         dbg!(fuel.iter().fold(0.0 as Float, |a, &b| a.max(b)));
 
-        for i in N / 2 - 32..=N / 2 + 32 {
+        for i in N / 2 - 64..=N / 2 + 64 {
             fuel[[i, N / 2]] += dt * 500.0;
         }
 

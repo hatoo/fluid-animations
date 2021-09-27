@@ -273,6 +273,7 @@ dependencies = [
  "ndarray-linalg",
  "noise",
  "num-traits",
+ "rand 0.8.4",
  "rayon",
 ]
 

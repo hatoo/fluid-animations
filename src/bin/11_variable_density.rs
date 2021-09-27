@@ -58,6 +58,7 @@ fn main() -> anyhow::Result<()> {
             dt,
             unit,
             &density,
+            density_amb,
             &Array::zeros(density.dim()),
         );
 

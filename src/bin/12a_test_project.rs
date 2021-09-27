@@ -26,7 +26,7 @@ fn main() -> anyhow::Result<()> {
         div[[N / 2, N / 2]] = 60.0;
 
         mac.self_advect(dt / unit);
-        mac.project_variable_density_div_control(dt, unit, &density, &div);
+        mac.project_variable_density_div_control(dt, unit, &density, 1.0, &div);
 
         let uv = mac.create_uv();
 

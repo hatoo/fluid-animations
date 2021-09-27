@@ -601,7 +601,7 @@ mod test {
         let density = array![[1.0, 1.0, 1.0], [1.0, 0.5, 1.0], [1.0, 1.0, 1.0],];
         let mut t = Array::zeros(d.dim());
 
-        let a = -1.0 / &density;
+        let a = Array::from_elem(density.dim(), -1.0);
         let c = 4.0 / &density;
 
         lin_solve_pcg2(&mut t, &d, &a, &c);

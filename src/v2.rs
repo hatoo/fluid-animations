@@ -191,6 +191,7 @@ impl Mac {
         dt: Float,
         dx: Float,
         density: &Array2<Float>,
+        density_amb: Float,
         divergence: &Array2<Float>,
     ) {
         let div = Array::from_shape_fn(self.dim(), |(i, j)| {
@@ -202,7 +203,7 @@ impl Mac {
 
         let scale = dt / (dx * dx);
 
-        let a = -1.0 * scale / density;
+        let a = Array::from_elem(density.dim(), -1.0 * scale / density_amb);
         let c = 4.0 * scale / density;
 
         let mut rev = Array::zeros(div.dim());

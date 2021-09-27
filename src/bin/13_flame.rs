@@ -97,7 +97,7 @@ fn main() -> anyhow::Result<()> {
         uv_mac.buoyancy2(&density, density_amb, g * dt);
         uv_mac.gauss_filter(uv_sigma2, unit);
         // uv_mac.project();
-        uv_mac.project_variable_density_div_control(dt, unit, &density, &div);
+        uv_mac.project_variable_density_div_control(dt, unit, &density, density_amb, &div);
 
         // uv_mac.v = uv_mac.v.map(|v| v.clamp(-0.4, 0.4));
         // uv_mac.u = uv_mac.u.map(|u| u.clamp(-0.4, 0.4));

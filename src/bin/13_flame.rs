@@ -41,6 +41,7 @@ fn main() -> anyhow::Result<()> {
     fuel[[N / 2, N / 2]] = 100.0;
 
     let mut prev_density = Array::from_elem(fuel.dim(), density_amb);
+    let d0 = Array::from_elem(fuel.dim(), density_amb);
 
     for f in 1..N_FRAME + 1 {
         // fluid_animations::image::save(f, &fuel)?;
@@ -97,7 +98,7 @@ fn main() -> anyhow::Result<()> {
         uv_mac.buoyancy2(&density, density_amb, g * dt);
         uv_mac.gauss_filter(uv_sigma2, unit);
         // uv_mac.project();
-        uv_mac.project_variable_density_div_control(dt, unit, &density, density_amb, &div);
+        uv_mac.project_variable_density_div_control(dt, unit, &d0, density_amb, &div);
 
         // uv_mac.v = uv_mac.v.map(|v| v.clamp(-0.4, 0.4));
         // uv_mac.u = uv_mac.u.map(|u| u.clamp(-0.4, 0.4));

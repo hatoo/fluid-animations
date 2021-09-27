@@ -19,11 +19,11 @@ fn main() -> anyhow::Result<()> {
     let dt: Float = 1.0 / 24.0;
     let unit = 1.0 / N as Float;
     let k_t = 0.0001;
-    let k_fuel = 0.0001;
+    let k_fuel = 0.001;
 
     let t_sigma2 = 0.5 * k_t * dt;
     let fuel_sigma2 = 0.5 * k_fuel * dt;
-    let uv_sigma2 = 0.5 * 0.1 * dt;
+    let uv_sigma2 = 0.5 * 0.05 * dt;
 
     let alpha = 0.01;
 
@@ -40,7 +40,7 @@ fn main() -> anyhow::Result<()> {
     t[[N / 2, N / 2]] = 500.0;
     fuel[[N / 2, N / 2]] = 1.0;
 
-    // let mut prev_density = Array::from_elem(fuel.dim(), density_amb);
+    let mut prev_density = Array::from_elem(fuel.dim(), density_amb);
     let d0 = Array::from_elem(fuel.dim(), density_amb);
 
     for f in 1..N_FRAME + 1 {
@@ -86,10 +86,15 @@ fn main() -> anyhow::Result<()> {
         });
 
         // let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| d_fuel[[i, j]] / dt / 3.0);
-        let div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| {
-            // -1.0 / dt * (density[[i, j]] - prev_density[[i, j]]) / density[[i, j]]
+        let mut div = Array::from_shape_fn((N + 2, N + 2), |(i, j)| {
+            // -1.0 / dt * (density[[i, j]] - prev_density[[i, j]]) / density[[i, j]] * unit
             d_fuel[[i, j]] * unit
         });
+
+        for i in N / 2 - 16..=N / 2 + 16 {
+            // div[[i, N / 2]] += 2.0;
+        }
+        div[[N / 2, N / 2]] += 16.0;
 
         /*
         dbg!(density[[N / 2, N / 2]]);
@@ -98,8 +103,8 @@ fn main() -> anyhow::Result<()> {
         */
         // dbg!(div[[N / 2, N / 2]]);
 
-        uv_mac.self_advect(dt / unit);
         uv_mac.buoyancy2(&density, density_amb, g * dt);
+        uv_mac.self_advect(dt / unit);
         uv_mac.gauss_filter(uv_sigma2, unit);
         // uv_mac.project();
         uv_mac.project_variable_density_div_control(dt, unit, &d0, density_amb, &div);
@@ -133,7 +138,7 @@ fn main() -> anyhow::Result<()> {
 
         dbg!(fuel.iter().fold(0.0 as Float, |a, &b| a.max(b)));
 
-        for i in N / 2 - 16..=N / 2 + 16 {
+        for i in N / 2 - 32..=N / 2 + 32 {
             fuel[[i, N / 2]] += dt * 500.0;
         }
 
@@ -175,7 +180,7 @@ fn main() -> anyhow::Result<()> {
 
         // dbg!(t[[N / 2, N / 2]]);
 
-        // prev_density = density;
+        prev_density = density;
 
         dbg!(t.iter().fold(0.0 as Float, |a, &b| a.max(b)));
 
